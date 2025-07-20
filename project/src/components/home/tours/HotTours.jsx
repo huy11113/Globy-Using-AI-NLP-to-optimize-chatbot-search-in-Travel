@@ -1,53 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Navigation, Autoplay } from 'swiper/modules';
+import { ArrowRight, AlertTriangle } from 'lucide-react';
 
 // Import các thành phần cần thiết
-import { fetchTours } from '@/data/tourData';
+import { useTours } from '@/hooks/useTours'; // Hook để lấy dữ liệu
 import TourCard from './TourCard';
-import TourCardSkeleton from './TourCardSkeleton'; // Giả sử bạn đã tạo file này
+import TourCardSkeleton from './TourCardSkeleton';
+import CarouselNavigation from '@/components/common/CarouselNavigation'; // Component nút điều hướng
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 
-const CarouselNavigation = () => (
-  <>
-    <button
-      aria-label="Previous Tour"
-      className="tour-swiper-button-prev absolute top-1/2 -translate-y-1/2 -left-4 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-sm shadow-2xl hover:bg-white transition-all flex items-center justify-center"
-    >
-      <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-slate-800" />
-    </button>
-    <button
-      aria-label="Next Tour"
-      className="tour-swiper-button-next absolute top-1/2 -translate-y-1/2 -right-4 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-sm shadow-2xl hover:bg-white transition-all flex items-center justify-center"
-    >
-      <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-slate-800" />
-    </button>
-  </>
-);
-
 const HotTours = () => {
-  const [featuredTours, setFeaturedTours] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Logic gọi dữ liệu giờ đây cực kỳ gọn gàng
+  const { tours, isLoading, error } = useTours();
 
-  useEffect(() => {
-    const loadTours = async () => {
-      setIsLoading(true);
-      try {
-        const allTours = await fetchTours();
-        setFeaturedTours(allTours.filter(tour => tour.isHot));
-      } catch (error) {
-        console.error("Failed to fetch tours:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Lọc ra các tour nổi bật từ dữ liệu API trả về
+  const featuredTours = tours.filter(tour => tour.featured);
 
-    loadTours();
-  }, []);
+  // Hàm render nội dung slider để xử lý các trạng thái
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <TourCardSkeleton key={index} />
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 text-red-500 bg-red-50 rounded-lg">
+          <AlertTriangle className="w-10 h-10 mb-3" />
+          <p className="font-semibold">{error}</p>
+        </div>
+      );
+    }
+
+    if (featuredTours.length === 0) {
+        return (
+          <div className="flex items-center justify-center h-64 text-gray-500 bg-gray-100 rounded-lg">
+            <p>Hiện không có tour nổi bật nào.</p>
+          </div>
+        );
+    }
+
+    return (
+      <div className="relative">
+        <Swiper
+          modules={[Navigation, Autoplay]}
+          loop={featuredTours.length > 4}
+          autoplay={{ delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+          navigation={{ nextEl: '.tour-swiper-button-next', prevEl: '.tour-swiper-button-prev' }}
+          spaceBetween={30}
+          slidesPerView={1}
+          breakpoints={{
+            640: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 },
+            1500: { slidesPerView: 4 },
+          }}
+        >
+          {featuredTours.map((tour) => (
+            <SwiperSlide key={tour._id} className="pb-8 h-full">
+              <TourCard tour={tour} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        <CarouselNavigation prevClass="tour-swiper-button-prev" nextClass="tour-swiper-button-next" />
+      </div>
+    );
+  };
 
   return (
     <section className="py-20 lg:py-28 bg-gray-50">
@@ -62,39 +88,7 @@ const HotTours = () => {
           </p>
         </div>
 
-        <div className="relative">
-          <Swiper
-            modules={[Navigation]}
-            loop={!isLoading && featuredTours.length > 4}
-            navigation={{
-              nextEl: '.tour-swiper-button-next',
-              prevEl: '.tour-swiper-button-prev'
-            }}
-            spaceBetween={30}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-              1500: { slidesPerView: 4 },
-            }}
-          >
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <SwiperSlide key={index} className="h-full pb-4">
-                  <TourCardSkeleton />
-                </SwiperSlide>
-              ))
-            ) : (
-              featuredTours.map((tour) => (
-                <SwiperSlide key={tour.id} className="h-full pb-4">
-                  <TourCard tour={tour} />
-                </SwiperSlide>
-              ))
-            )}
-          </Swiper>
-          
-          {!isLoading && featuredTours.length > 0 && <CarouselNavigation />}
-        </div>
+        {renderContent()}
 
         <div className="text-center mt-16">
           <Link

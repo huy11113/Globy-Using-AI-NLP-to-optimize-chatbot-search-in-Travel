@@ -8,7 +8,8 @@ import { ArrowRight } from 'lucide-react';
 import { cityDestinations } from '../../../data/topDestinations'; // Chú ý đường dẫn có thể cần thay đổi
 import SectionHeader from './SectionHeader';
 import DestinationCard from './DestinationCard';
-import CarouselNavigation from './CarouselNavigation';
+// Sử dụng alias @ để trỏ từ thư mục src
+import CarouselNavigation from "@/components/common/CarouselNavigation";
 
 // Import CSS của Swiper
 import 'swiper/css';
