@@ -1,167 +1,101 @@
 import React from 'react';
-import { 
-  Plane, 
-  MapPin, 
-  Shield, 
-  Clock, 
-  Headphones, 
-  Camera,
-  Car,
-  Home,
-  Sparkles
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plane, Hotel, MapPinned, LifeBuoy, ShieldCheck, Ticket } from 'lucide-react';
+
+// Dữ liệu và icon (không thay đổi)
+const servicesData = [
+  {
+    icon: <MapPinned className="h-8 w-8 text-blue-600" />,
+    title: 'Tailor-Made Tours',
+    description: 'We craft personalized itineraries that cater to your unique interests, ensuring every trip is a perfect fit for you.',
+  },
+  {
+    icon: <Hotel className="h-8 w-8 text-blue-600" />,
+    title: 'Curated Accommodations',
+    description: 'Handpicked hotels and resorts, from luxury stays to charming boutiques, all vetted for quality and comfort.',
+  },
+  {
+    icon: <Ticket className="h-8 w-8 text-blue-600" />,
+    title: 'Seamless Bookings',
+    description: 'Easy and competitive flight and transport booking to destinations worldwide, making your travel hassle-free.',
+  },
+  {
+    icon: <ShieldCheck className="h-8 w-8 text-blue-600" />,
+    title: '24/7 Expert Support',
+    description: 'Our dedicated support team is available around the clock to assist you with any request, anytime, anywhere.',
+  },
+];
+
+// Cấu hình animation (không thay đổi)
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+};
 
 const Services = () => {
-  const services = [
-    {
-      icon: Plane,
-      title: 'Flight Booking',
-      description: 'Find and book the best flights worldwide with competitive prices and flexible options.',
-      features: ['Global airline partnerships', 'Best price guarantee', 'Flexible booking options'],
-      color: 'from-sky-500 to-blue-600'
-    },
-    {
-      icon: Home,
-      title: 'Accommodation',
-      description: 'From luxury resorts to cozy boutique hotels, find the perfect place to stay.',
-      features: ['Verified reviews', 'Instant booking', 'Special deals & discounts'],
-      color: 'from-emerald-500 to-teal-600'
-    },
-    {
-      icon: Car,
-      title: 'Transportation',
-      description: 'Reliable ground transportation including car rentals, transfers, and local transport.',
-      features: ['Airport transfers', 'Car rental options', 'Local transport guides'],
-      color: 'from-orange-500 to-red-600'
-    },
-    {
-      icon: MapPin,
-      title: 'Custom Itineraries',
-      description: 'Personalized travel plans crafted by our expert travel consultants.',
-      features: ['Tailored experiences', 'Local insights', 'Flexible scheduling'],
-      color: 'from-purple-500 to-indigo-600'
-    },
-    {
-      icon: Shield,
-      title: 'Travel Insurance',
-      description: 'Comprehensive travel protection for peace of mind on your adventures.',
-      features: ['Medical coverage', 'Trip cancellation', '24/7 emergency assistance'],
-      color: 'from-green-500 to-emerald-600'
-    },
-    {
-      icon: Camera,
-      title: 'Photo Tours',
-      description: 'Capture stunning memories with our professional photography tour guides.',
-      features: ['Professional guides', 'Equipment provided', 'Photo editing tips'],
-      color: 'from-pink-500 to-rose-600'
-    },
-    {
-      icon: Headphones,
-      title: '24/7 Support',
-      description: 'Round-the-clock customer support to assist you throughout your journey.',
-      features: ['Multilingual support', 'Emergency assistance', 'Real-time updates'],
-      color: 'from-cyan-500 to-blue-600'
-    },
-    {
-      icon: Clock,
-      title: 'Last-Minute Deals',
-      description: 'Spontaneous traveler? Grab amazing last-minute deals and save big.',
-      features: ['Flash sales', 'Same-day booking', 'Exclusive offers'],
-      color: 'from-amber-500 to-orange-600'
-    }
-  ];
-
   return (
-    <section id="services" className="py-20 bg-white relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-sky-100 to-blue-100 rounded-full opacity-50"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full opacity-50"></div>
-      </div>
+    <section 
+      className="relative bg-cover bg-center bg-no-repeat py-24 sm:py-32 overflow-hidden"
+      style={{ backgroundImage: `url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop')` }}
+    >
+      {/* Lớp phủ tối màu để tăng độ tương phản */}
+      <div className="absolute inset-0 bg-gray-900/50"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {/* Enhanced Section Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center space-x-2 bg-sky-100 text-sky-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <Sparkles className="h-4 w-4" />
-            <span>OUR SERVICES</span>
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Complete Travel Solutions
+      <div className="relative mx-auto max-w-screen-xl px-6 lg:px-8">
+        
+        {/* Phần tiêu đề */}
+        <motion.div 
+          className="mx-auto max-w-3xl text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          viewport={{ once: true }}
+        >
+        
+          {/* ✨ YÊU CẦU: Thay đổi màu chữ để tương phản với ảnh */}
+          <h2 className="mt-2 font-serif text-4xl font-bold tracking-tight text-white sm:text-5xl [text-shadow:0_2px_4px_rgba(0,0,0,0.5)]">
+            Everything You Need For a Perfect Trip
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            From planning to execution, we provide comprehensive travel services to make your journey seamless and unforgettable.
+          <p className="mt-6 text-xl leading-8 text-gray-200">
+            We provide a complete range of services to ensure your travel experience is seamless and unforgettable from start to finish.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Enhanced Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {services.map((service, index) => {
-            const IconComponent = service.icon;
-            return (
-              <div 
-                key={index}
-                className="bg-white rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 group border border-gray-100 hover:border-transparent relative overflow-hidden"
-              >
-                {/* Background Gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
-                
-                {/* Icon */}
-                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${service.color} text-white rounded-2xl mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
-                  <IconComponent className="h-8 w-8" />
-                </div>
-
-                {/* Content */}
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-sky-500 group-hover:to-blue-600 transition-all duration-300">
+        {/* Lưới chứa các thẻ dịch vụ */}
+        <motion.div 
+          className="mx-auto mt-20 grid max-w-none grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-2"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={containerVariants}
+        >
+          {servicesData.map((service, index) => (
+            <motion.div 
+              key={index}
+              className="group relative flex gap-x-6 rounded-2xl bg-white p-8 shadow-2xl ring-1 ring-gray-900/5 transition-all duration-300 ease-in-out hover:-translate-y-2"
+              variants={itemVariants}
+            >
+              <div className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-gray-50 ring-1 ring-gray-900/5">
+                {service.icon}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900">
+                  <span className="absolute inset-0" aria-hidden="true" />
                   {service.title}
                 </h3>
-                <p className="text-gray-600 mb-4 leading-relaxed">
-                  {service.description}
-                </p>
-
-                {/* Enhanced Features */}
-                <ul className="space-y-2">
-                  {service.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
-                      <div className={`w-1.5 h-1.5 bg-gradient-to-r ${service.color} rounded-full mr-3 group-hover:scale-125 transition-transform duration-300`}></div>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Hover Effect Border */}
-                <div className={`absolute inset-0 rounded-3xl border-2 border-transparent group-hover:border-gradient-to-r group-hover:${service.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}></div>
+                <p className="mt-2 text-base leading-7 text-gray-600">{service.description}</p>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Enhanced CTA Section */}
-        <div className="mt-20 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent"></div>
-            <div className="absolute top-10 right-10 w-20 h-20 border border-white/20 rounded-full"></div>
-            <div className="absolute bottom-10 left-10 w-16 h-16 border border-white/20 rounded-full"></div>
-          </div>
-
-          <div className="relative z-10">
-            <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Start Your Journey?
-            </h3>
-            <p className="text-xl text-sky-100 mb-8 max-w-2xl mx-auto">
-              Let our travel experts help you plan the perfect adventure. Get in touch today and turn your travel dreams into reality.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-sky-500 hover:bg-gray-100 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl">
-                Get Free Consultation
-              </button>
-              <button className="border-2 border-white text-white hover:bg-white hover:text-sky-500 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105">
-                Browse Packages
-              </button>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
