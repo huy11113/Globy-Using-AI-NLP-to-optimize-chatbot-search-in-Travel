@@ -1,36 +1,48 @@
 import { useState, useEffect } from 'react';
 
-export const useTours = () => {
-  const [tours, setTours] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const useTours = (url) => {
+    const [tours, setTours] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const loadToursFromAPI = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Gọi đến API server backend đang chạy ở cổng 4000
-        const response = await fetch('http://localhost:4000/api/tours');
-        
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+    useEffect(() => {
+        const fetchTours = async () => {
+            // ✨ SỬA LỖI: Nếu không có URL thì không làm gì cả
+            if (!url) {
+                setLoading(false);
+                return;
+            }
 
-        const data = await response.json();
-        setTours(data);
+            setLoading(true);
+            setError(null); // Reset lỗi trước mỗi lần gọi mới
 
-      } catch (err) {
-        setError('Không thể tải danh sách tour. Vui lòng thử lại sau.');
-        console.error("Lỗi khi gọi API:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+            try {
+                const res = await fetch(`http://localhost:4000${url}`);
 
-    loadToursFromAPI();
-  }, []); // Mảng rỗng đảm bảo hook chỉ chạy 1 lần
+                if (!res.ok) {
+                    throw new Error(`Lỗi HTTP: ${res.status}`);
+                }
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                    setTours(result.data);
+                } else {
+                    throw new Error(result.message || 'Lấy dữ liệu thất bại');
+                }
 
-  return { tours, isLoading, error };
+            } catch (err) {
+                setError(err);
+                console.error("Lỗi khi fetch tours:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTours();
+    }, [url]); // Phụ thuộc vào url
+
+    return { tours, loading, error };
 };
+
+export default useTours;
