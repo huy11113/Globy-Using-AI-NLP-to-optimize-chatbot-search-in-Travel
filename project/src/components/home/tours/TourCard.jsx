@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Star, Clock, Heart, ArrowRight, MapPin } from 'lucide-react';
 
-const TourCard = ({ tour }) => {
+const TourCard = React.memo(({ tour }) => {
   const [isLiked, setIsLiked] = useState(false);
 
   const { _id, image, title, destination, description, rating, reviewsCount, duration, price, featured } = tour;
@@ -15,34 +15,40 @@ const TourCard = ({ tour }) => {
         <Link 
           to={`/tours/${_id}`} 
           className="block h-80 overflow-hidden rounded-t-xl"
-          aria-label={`View details for ${title}`} // Thêm aria-label cho accessibility
+          aria-label={`View details for ${title}`}
         >
           <img
             src={image}
             alt={`A beautiful scene from the ${title} tour`}
             className="h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
           />
-          {/* Lớp phủ gradient mạnh hơn một chút để chữ dễ đọc hơn */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         </Link>
 
-        {/* --- Thông tin overlay trên ảnh --- */}
-        <div className="absolute inset-0 flex flex-col p-6 text-white pointer-events-none">
-          {featured && (
-            <div className="pointer-events-auto w-fit rounded-full bg-gradient-to-r from-red-500 to-orange-400 px-4 py-1.5 text-sm font-bold text-white shadow-lg">
+        {/* ✅ SỬA LỖI TẠI ĐÂY: Tái cấu trúc phần header của ảnh */}
+        <div className="absolute top-0 left-0 w-full p-6">
+          <div className="flex justify-between items-start">
+            {/* Tag "Featured" */}
+            {featured && (
+              <div className="pointer-events-auto w-fit rounded-full bg-gradient-to-r from-red-500 to-orange-400 px-4 py-1.5 text-sm font-bold text-white shadow-lg">
                 FEATURED
-            </div>
-          )}
-          <button
-            onClick={() => setIsLiked(!isLiked)}
-            className="pointer-events-auto ml-auto -mt-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:bg-white/30 hover:scale-110"
-            aria-label="Add to favorites"
-          >
-            <Heart className={`h-5 w-5 transition-all ${isLiked ? 'fill-red-500 text-red-500' : 'fill-transparent stroke-white'}`} />
-          </button>
-          
-          {/* ✨ CẢI TIẾN: Hiệu ứng trượt lên cho khối chữ ✨ */}
-          <div className="mt-auto w-full transform transition-transform duration-500 ease-in-out group-hover:-translate-y-2">
+              </div>
+            )}
+
+            {/* Nút trái tim (đã bỏ -mt-10 và thêm ml-auto) */}
+            <button
+              onClick={() => setIsLiked(!isLiked)}
+              className="pointer-events-auto ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:bg-white/30 hover:scale-110"
+              aria-label="Add to favorites"
+            >
+              <Heart className={`h-5 w-5 transition-all ${isLiked ? 'fill-red-500 text-red-500' : 'fill-transparent stroke-white'}`} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Phần nội dung dưới cùng của ảnh */}
+        <div className="absolute bottom-0 left-0 w-full p-6 text-white pointer-events-none">
+          <div className="transform transition-transform duration-500 ease-in-out group-hover:-translate-y-2">
               <div className="mb-2 flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4" />
                 <span className="font-semibold tracking-wider uppercase text-white shadow-sm">{destination?.name || 'Global'}</span>
@@ -54,8 +60,8 @@ const TourCard = ({ tour }) => {
         </div>
       </div>
 
+      {/* Phần nội dung bên dưới thẻ (giữ nguyên) */}
       <div className="flex flex-col p-6">
-        {/* Phần mô tả được đưa xuống dưới, tách biệt với các thông tin khác */}
         <p className="mb-5 text-base text-gray-600 line-clamp-3">
           {description}
         </p>
@@ -89,9 +95,8 @@ const TourCard = ({ tour }) => {
       </div>
     </div>
   );
-};
+});
 
-// PropTypes không thay đổi
 TourCard.propTypes = {
   tour: PropTypes.shape({
     _id: PropTypes.string.isRequired,

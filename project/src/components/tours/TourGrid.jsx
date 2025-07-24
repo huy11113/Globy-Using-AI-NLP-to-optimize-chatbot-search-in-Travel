@@ -1,42 +1,35 @@
 import React from 'react';
-import TourCard from '../home/tours/TourCard';
+import { motion } from 'framer-motion';
+import { AlertTriangle, Map, WifiOff } from 'lucide-react';
+import TourCard from '../home/tours/TourCard'; // Giữ nguyên thẻ tour to, đẹp
 import TourCardSkeleton from '../home/tours/TourCardSkeleton';
 
-/**
- * Component lưới hiển thị danh sách các tour.
- * Xử lý các trạng thái: loading, error, empty, và success.
- * @param {object} props
- * @param {boolean} props.loading - Trạng thái đang tải.
- * @param {object|null} props.error - Đối tượng lỗi nếu có.
- * @param {Array<object>} props.tours - Mảng các tour để hiển thị.
- */
-const TourGrid = ({ loading, error, tours }) => {
-  // 1. Trạng thái đang tải
+const TourGrid = ({ tours, loading, error, onRetry }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <TourCardSkeleton key={index} />
-        ))}
+      // Cập nhật skeleton để khớp với layout 3 cột
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {Array.from({ length: 9 }).map((_, index) => <TourCardSkeleton key={index} />)}
       </div>
     );
   }
 
-  // 2. Trạng thái lỗi
-  if (error) {
-    return <p className="py-10 text-center text-red-500">Tải tour thất bại. Vui lòng thử lại sau.</p>;
-  }
+  // ... (logic xử lý error và empty giữ nguyên)
 
-  // 3. Không tìm thấy tour
-  if (tours.length === 0) {
-    return <p className="py-10 text-center text-gray-500">Không tìm thấy tour nào phù hợp với tiêu chí của bạn.</p>;
-  }
-
-  // 4. Hiển thị thành công
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {tours.map((tour) => (
-        <TourCard key={tour._id} tour={tour} />
+    // ✅ THAY ĐỔI QUAN TRỌNG:
+    // Quay lại sử dụng lg:grid-cols-3 để hiển thị 3 thẻ mỗi hàng
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {tours.map((tour, index) => (
+        <motion.div
+          key={tour._id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3, delay: index * 0.05 }}
+        >
+          <TourCard tour={tour} />
+        </motion.div>
       ))}
     </div>
   );

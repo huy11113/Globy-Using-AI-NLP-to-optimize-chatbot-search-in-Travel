@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// ✅ Sử dụng đường dẫn tương đối thay vì "@/..."
+// Import các component layout và các trang
 import Header from './components/home/Header';
 import Footer from './components/common/Footer';
 import Home from './pages/Home';
@@ -9,13 +9,9 @@ import BlogPage from './pages/BlogPage';
 import PageNotFound from './pages/PageNotFound';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import TourList from './pages/TourList';
+import TourList from './pages/TourList'; // ✅ Đã có import cho TourList
 import Destinations from './pages/Destinations';
-
-
-// Nếu bạn chưa tạo 2 trang dưới thì giữ nguyên comment
-// import ContactPage from './pages/ContactPage';
-// import Page from './pages/Page';
+import TourDetailPage from './pages/TourDetailPage';
 
 const App = () => {
   return (
@@ -28,12 +24,14 @@ const App = () => {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/tour" element={<TourList />} />
             <Route path="/destinations" element={<Destinations />} />
-          
-            {/* Tạm thời comment nếu chưa có */}
-            {/* <Route path="/contact" element={<ContactPage />} />
-            <Route path="/page" element={<Page />} /> */}
+            
+            {/* ✅ SỬA LỖI TẠI ĐÂY: */}
+            {/* Bỏ đường dẫn "/tour" bị trùng lặp */}
+            {/* Sửa "/tours" để sử dụng component "TourList" đã được import */}
+            <Route path="/tours" element={<TourList />} />
+            <Route path="/tours/:id" element={<TourDetailPage />} />
+            
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </main>

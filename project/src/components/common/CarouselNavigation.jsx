@@ -4,19 +4,25 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const CarouselNavigation = () => (
   <>
     <button
-      aria-label="Previous Tour"
-      className="tour-swiper-button-prev absolute top-1/2 -translate-y-1/2 -left-4 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-sm shadow-2xl hover:bg-white transition-all flex items-center justify-center"
+      aria-label="Previous Slide"
+      className="tour-swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 
+                 absolute top-1/2 left-0 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 
+                 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white 
+                 flex items-center justify-center"
     >
-      <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-slate-800" />
+      <ChevronLeft className="w-6 h-6 text-gray-700" />
     </button>
+
     <button
-      aria-label="Next Tour"
-      className="tour-swiper-button-next absolute top-1/2 -translate-y-1/2 -right-4 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/80 backdrop-blur-sm shadow-2xl hover:bg-white transition-all flex items-center justify-center"
+      aria-label="Next Slide"
+      className="tour-swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 
+                 absolute top-1/2 right-0 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 
+                 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white 
+                 flex items-center justify-center"
     >
-      <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-slate-800" />
+      <ChevronRight className="w-6 h-6 text-gray-700" />
     </button>
   </>
 );
 
-// Đảm bảo bạn có dòng này ở cuối file
 export default CarouselNavigation;

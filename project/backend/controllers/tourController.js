@@ -1,49 +1,57 @@
-const Tour = require('../models/tour');
+import Tour from '../models/Tour.js';
 
-// @desc    Lấy tất cả tour với bộ lọc, sắp xếp và phân trang
-// @route   GET /api/tours
-// @access  Public
-const getAllTours = async (req, res) => {
+export const getAllTours = async (req, res) => {
   try {
-    // 1. Xây dựng đối tượng truy vấn (Query Object)
     const queryObj = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryObj[el]);
-
-    // Xử lý các bộ lọc nâng cao (ví dụ: khoảng giá)
-    // Ví dụ: /tours?price[gte]=1000&duration[lte]=5
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
     
     let query = Tour.find(JSON.parse(queryStr));
 
-    // 2. Sắp xếp (Sorting)
-    // Ví dụ: /tours?sort=price,-ratingsAverage
     if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
+      query = query.sort(req.query.sort.split(',').join(' '));
     } else {
-      query = query.sort('-createdAt'); // Mặc định sắp xếp theo tour mới nhất
+      query = query.sort('-createdAt');
     }
 
-    // 3. Lấy trường dữ liệu (Field Limiting)
-    // Populate để lấy tên của destination
-    query = query.populate('destinationId', 'name');
+    // Populate
+    query = query.populate({ path: 'destinationId', select: 'name' });
 
-
-    // 4. Thực thi truy vấn
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 9;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+    
+    // Thực thi truy vấn
     const tours = await query;
+    const totalTours = await Tour.countDocuments(JSON.parse(queryStr));
+    
+    // =================================================================
+    // ✅ BƯỚC DEBUG: In dữ liệu của tour đầu tiên ra terminal
+    // =================================================================
+    console.log('---[ DEBUG ]--- Dữ liệu tour thô sau khi populate:');
+    console.log(tours[0]); 
+    // =================================================================
 
-    // Gửi phản hồi
+    // Định dạng lại dữ liệu
+    const formattedTours = tours.map(tour => {
+        const tourObject = tour.toObject();
+        tourObject.destination = tourObject.destinationId;
+        delete tourObject.destinationId;
+        return tourObject;
+    });
+
     res.status(200).json({
       success: true,
-      count: tours.length,
-      data: tours,
+      count: formattedTours.length,
+      total: totalTours,
+      data: formattedTours,
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
-
-module.exports = { getAllTours };

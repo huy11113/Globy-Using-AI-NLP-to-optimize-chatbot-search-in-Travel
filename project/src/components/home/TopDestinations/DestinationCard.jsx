@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { MapPin, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const DestinationCard = ({ destination }) => {
   return (
@@ -32,7 +32,7 @@ const DestinationCard = ({ destination }) => {
 
 DestinationCard.propTypes = {
   destination: PropTypes.shape({
-    id: PropTypes.string.isRequired,
+    _id: PropTypes.string.isRequired, // ✅ Sửa từ id thành _id
     name: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,

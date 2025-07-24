@@ -1,62 +1,55 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
-// Lấy base URL từ biến môi trường
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-/**
- * Custom hook chuyên nghiệp để lấy dữ liệu tour từ API.
- * Tự động refetch khi các bộ lọc hoặc sắp xếp thay đổi.
- * @param {object} filters - Đối tượng chứa các giá trị lọc và sắp xếp.
- */
-const useTours = (filters) => {
+// ✅ Thêm `featured` vào danh sách tham số
+const useTours = ({ searchTerm = '', sortBy = '-createdAt', page = 1, limit = 9, maxPrice = '', minRating = '', featured = false }) => {
   const [tours, setTours] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Sử dụng AbortController để hủy request khi component unmount hoặc filter thay đổi
-    const controller = new AbortController();
-    const { signal } = controller;
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (sortBy) params.set('sort', sortBy);
+    if (maxPrice) params.set('price[lte]', maxPrice);
+    if (minRating) params.set('rating[gte]', minRating);
+    params.set('page', page);
+    params.set('limit', limit);
+    // ✅ Thêm logic để xử lý bộ lọc `featured`
+    if (featured) {
+      params.set('featured', 'true');
+    }
 
-    const fetchTours = async () => {
+    const queryString = params.toString();
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchToursData = async () => {
       setLoading(true);
       setError(null);
-
       try {
-        // Xây dựng query string từ đối tượng filters
-        const params = new URLSearchParams();
-        if (filters.destination) params.append('destinationId.name', filters.destination);
-        if (filters.sort) params.append('sort', filters.sort);
-        // Thêm các filter khác tại đây (price, duration...)
-
-        const response = await axios.get(`${API_URL}/api/tours`, {
-          params,
-          signal, // Gán signal vào request
-        });
-        
-        setTours(response.data.data);
-      } catch (err) {
-        if (axios.isCancel(err)) {
-          // Bỏ qua lỗi khi request bị hủy một cách chủ động
-          console.log('Request canceled:', err.message);
-        } else {
-          setError(err.response ? err.response.data.message : err.message);
+        const response = await fetch(`${API_URL}/api/tours?${queryString}`, { signal });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Lỗi mạng! Status: ${response.status}`);
         }
+        const result = await response.json();
+        setTours(result.data);
+        setTotal(result.total);
+      } catch (err) {
+        if (err.name !== 'AbortError') { setError(err.message); }
       } finally {
         setLoading(false);
       }
     };
+    fetchToursData();
+    return () => { controller.abort(); };
 
-    fetchTours();
+  }, [searchTerm, sortBy, page, limit, maxPrice, minRating, featured]); // ✅ Thêm `featured` vào dependencies
 
-    // Cleanup function: Hủy request khi component bị unmount hoặc effect chạy lại
-    return () => {
-      controller.abort();
-    };
-  }, [filters]); // Phụ thuộc vào filters, effect sẽ chạy lại khi filters thay đổi
-
-  return { tours, loading, error };
+  return { tours, total, loading, error };
 };
 
 export default useTours;
