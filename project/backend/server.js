@@ -35,17 +35,28 @@ const destinationSchema = new mongoose.Schema({
   continent: String,
 }, { timestamps: true });
 
-// ✅ CẬP NHẬT TẠI ĐÂY: Thêm trường `itinerary` vào tourSchema
+// ... trong backend/server.js
+
 const tourSchema = new mongoose.Schema({
   title: String,
   description: String,
   destinationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Destination' },
   price: Number,
   duration: String,
-  image: String,
+  image: String, // Ảnh chính
   rating: { type: Number, default: 0 },
   reviewsCount: { type: Number, default: 0 },
   featured: Boolean,
+  
+  // ✅ CÁC TRƯỜNG MỚI
+  images: [String], // Thư viện ảnh
+  startLocation: String,
+  endLocation: String,
+  included: [String],
+  excluded: [String],
+  tags: [String],
+  category: String,
+  
   departures: [{
     date: Date,
     seatsAvailable: Number
@@ -56,6 +67,8 @@ const tourSchema = new mongoose.Schema({
     details: String
   }]
 }, { timestamps: true });
+
+// ...
 
 const bookingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -2,41 +2,44 @@ import Tour from '../models/Tour.js';
 
 export const getAllTours = async (req, res) => {
   try {
+    // 1. Tạo một bản sao của query để xử lý
     const queryObj = { ...req.query };
+    
+    // 2. Các trường đặc biệt cần loại bỏ khỏi bộ lọc chính
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach(el => delete queryObj[el]);
+
+    // 3. Xử lý các bộ lọc nâng cao (ví dụ: giá cả)
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
     
     let query = Tour.find(JSON.parse(queryStr));
 
+    // 4. Sắp xếp
     if (req.query.sort) {
-      query = query.sort(req.query.sort.split(',').join(' '));
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
     } else {
-      query = query.sort('-createdAt');
+      query = query.sort('-createdAt'); // Mặc định
     }
 
-    // Populate
-    query = query.populate({ path: 'destinationId', select: 'name' });
+    // 5. Populate để lấy tên địa điểm
+    query = query.populate({
+        path: 'destinationId',
+        select: 'name'
+    });
 
-    // Pagination
+    // 6. Phân trang
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 9;
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
     
-    // Thực thi truy vấn
+    // 7. Thực thi truy vấn
     const tours = await query;
     const totalTours = await Tour.countDocuments(JSON.parse(queryStr));
-    
-    // =================================================================
-    // ✅ BƯỚC DEBUG: In dữ liệu của tour đầu tiên ra terminal
-    // =================================================================
-    console.log('---[ DEBUG ]--- Dữ liệu tour thô sau khi populate:');
-    console.log(tours[0]); 
-    // =================================================================
 
-    // Định dạng lại dữ liệu
+    // 8. Định dạng lại dữ liệu trước khi gửi đi
     const formattedTours = tours.map(tour => {
         const tourObject = tour.toObject();
         tourObject.destination = tourObject.destinationId;
@@ -44,6 +47,7 @@ export const getAllTours = async (req, res) => {
         return tourObject;
     });
 
+    // 9. Gửi phản hồi
     res.status(200).json({
       success: true,
       count: formattedTours.length,

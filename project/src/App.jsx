@@ -9,9 +9,10 @@ import BlogPage from './pages/BlogPage';
 import PageNotFound from './pages/PageNotFound';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import TourList from './pages/TourList'; // ✅ Đã có import cho TourList
+import TourList from './pages/TourList';
 import Destinations from './pages/Destinations';
 import TourDetailPage from './pages/TourDetailPage';
+import ContactPage from './pages/ContactPage'; // ✅ Import trang mới
 
 const App = () => {
   return (
@@ -21,17 +22,13 @@ const App = () => {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/tours" element={<TourList />} />
+            <Route path="/tours/:id" element={<TourDetailPage />} />
+            <Route path="/destinations" element={<Destinations />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/destinations" element={<Destinations />} />
-            
-            {/* ✅ SỬA LỖI TẠI ĐÂY: */}
-            {/* Bỏ đường dẫn "/tour" bị trùng lặp */}
-            {/* Sửa "/tours" để sử dụng component "TourList" đã được import */}
-            <Route path="/tours" element={<TourList />} />
-            <Route path="/tours/:id" element={<TourDetailPage />} />
-            
+            <Route path="/contact" element={<ContactPage />} /> {/* ✅ Thêm route mới */}
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </main>
