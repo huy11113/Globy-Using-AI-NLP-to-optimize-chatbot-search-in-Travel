@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config(); // Đảm bảo bạn đã chạy: npm install dotenv
+const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 // --- CẤU HÌNH ---
 const PORT = process.env.PORT || 4000;
@@ -20,11 +21,8 @@ mongoose.connect(MONGO_URI)
 
 const userSchema = new mongoose.Schema({
   name: String,
-  email: { type: String, unique: true, required: true },
-  passwordHash: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin', 'guide'], default: 'user' },
-  avatar: String,
-  phone: String,
+  phoneNumber: { type: String, unique: true, sparse: true },
+  password: { type: String },
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }],
 }, { timestamps: true });
 
@@ -35,28 +33,23 @@ const destinationSchema = new mongoose.Schema({
   continent: String,
 }, { timestamps: true });
 
-// ... trong backend/server.js
-
 const tourSchema = new mongoose.Schema({
   title: String,
   description: String,
   destinationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Destination' },
   price: Number,
   duration: String,
-  image: String, // Ảnh chính
+  image: String,
   rating: { type: Number, default: 0 },
   reviewsCount: { type: Number, default: 0 },
   featured: Boolean,
-  
-  // ✅ CÁC TRƯỜNG MỚI
-  images: [String], // Thư viện ảnh
+  images: [String],
   startLocation: String,
   endLocation: String,
   included: [String],
   excluded: [String],
   tags: [String],
   category: String,
-  
   departures: [{
     date: Date,
     seatsAvailable: Number
@@ -67,8 +60,6 @@ const tourSchema = new mongoose.Schema({
     details: String
   }]
 }, { timestamps: true });
-
-// ...
 
 const bookingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -155,9 +146,156 @@ const HotelBooking = mongoose.model('HotelBooking', hotelBookingSchema);
 const Payment = mongoose.model('Payment', paymentSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 
-// --- CÁC API ENDPOINT ---
+// --- API ENDPOINTS ---
 
-// Endpoint chung để lấy dữ liệu (đơn giản)
+// === API XÁC THỰC NGƯỜI DÙNG ===
+const authRouter = express.Router();
+
+authRouter.post('/register', async (req, res) => {
+    try {
+        const { phoneNumber, password, name, email } = req.body;
+        if (!phoneNumber || !password) {
+            return res.status(400).json({ success: false, message: 'Số điện thoại và mật khẩu là bắt buộc.' });
+        }
+        const existingUser = await User.findOne({ phoneNumber });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Số điện thoại đã tồn tại.' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ phoneNumber, password: hashedPassword, name, email });
+        await newUser.save();
+        res.status(201).json({ success: true, message: "Đăng ký thành công!", data: { id: newUser._id } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+    }
+});
+
+authRouter.post('/login', async (req, res) => {
+    try {
+        const { phoneNumber, password } = req.body;
+        const user = await User.findOne({ phoneNumber });
+        if (!user || !await bcrypt.compare(password, user.password)) {
+            return res.status(401).json({ success: false, message: 'Số điện thoại hoặc mật khẩu không hợp lệ.' });
+        }
+        const { password: _, resetCode: __, ...userData } = user.toObject();
+        res.status(200).json({ success: true, message: "Đăng nhập thành công!", data: userData });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+    }
+});
+
+authRouter.post('/forgot-password', async (req, res) => {
+    try {
+        const { phoneNumber } = req.body;
+        const user = await User.findOne({ phoneNumber });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Số điện thoại không tồn tại.' });
+        }
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetCode = resetCode;
+        await user.save();
+        console.log(`Mã xác nhận cho ${phoneNumber}: ${resetCode}`);
+        res.status(200).json({ success: true, message: 'Mã xác nhận đã được gửi (kiểm tra console backend).' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+    }
+});
+
+authRouter.post('/reset-password', async (req, res) => {
+    try {
+        const { phoneNumber, resetCode, newPassword } = req.body;
+        const user = await User.findOne({ phoneNumber, resetCode });
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Số điện thoại hoặc mã xác nhận không đúng.' });
+        }
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetCode = undefined;
+        await user.save();
+        res.status(200).json({ success: true, message: 'Mật khẩu đã được đặt lại thành công.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+    }
+});
+
+authRouter.post('/forgot-password', async (req, res) => {
+    try {
+        // ... (logic tìm người dùng)
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetCode = resetCode;
+        await user.save();
+        
+        // DÒNG NÀY CHỈ IN MÃ RA CONSOLE, KHÔNG GỬI SMS
+        console.log(`Mã xác nhận cho ${phoneNumber}: ${resetCode}`); 
+        
+        res.status(200).json({ success: true, message: 'Mã xác nhận đã được gửi (kiểm tra console backend).' });
+    } catch (error) {
+      
+    }
+});
+
+app.use('/api/auth', authRouter);
+// Lấy danh sách yêu thích của người dùng
+const wishlistRouter = express.Router();
+
+// Lấy danh sách yêu thích của người dùng
+wishlistRouter.get('/:userId', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).populate({
+            path: 'wishlist',
+            model: 'Tour',
+            populate: { // Lấy thêm thông tin destination của tour
+                path: 'destination',
+                model: 'Destination'
+            }
+        });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+        }
+        res.status(200).json({ success: true, data: user.wishlist });
+    } catch (error) {
+        console.error("Lỗi lấy wishlist:", error);
+        res.status(500).json({ success: false, message: "Lỗi máy chủ." });
+    }
+});
+
+// Thêm/Xóa một tour khỏi danh sách yêu thích (toggle)
+wishlistRouter.post('/toggle', async (req, res) => {
+    const { userId, tourId } = req.body;
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+        }
+
+        const tourIndex = user.wishlist.indexOf(tourId);
+        if (tourIndex > -1) {
+            // Nếu tour đã có, xóa đi
+            user.wishlist.splice(tourIndex, 1);
+        } else {
+            // Nếu tour chưa có, thêm vào
+            user.wishlist.push(tourId);
+        }
+        await user.save();
+        
+        // Trả về danh sách wishlist đã được cập nhật đầy đủ thông tin
+        const updatedUser = await User.findById(userId).populate({
+            path: 'wishlist',
+            model: 'Tour',
+             populate: {
+                path: 'destination',
+                model: 'Destination'
+            }
+        });
+        res.status(200).json({ success: true, data: updatedUser.wishlist });
+
+    } catch (error) {
+        console.error("Lỗi toggle wishlist:", error);
+        res.status(500).json({ success: false, message: "Lỗi máy chủ." });
+    }
+});
+
+app.use('/api/wishlist', wishlistRouter);
+// === CÁC API HIỆN CÓ CỦA BẠN ===
 const createGenericEndpoint = (model) => async (req, res) => {
   try {
     const items = await model.find({});
@@ -167,7 +305,6 @@ const createGenericEndpoint = (model) => async (req, res) => {
   }
 };
 
-// Endpoint để lấy danh sách tours
 app.get('/api/tours', async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 9;
@@ -212,7 +349,6 @@ app.get('/api/tours', async (req, res) => {
   }
 });
 
-// Endpoint để lấy chi tiết một tour bằng ID
 app.get('/api/tours/:id', async (req, res) => {
   try {
     const tourId = req.params.id;
@@ -232,7 +368,6 @@ app.get('/api/tours/:id', async (req, res) => {
   }
 });
 
-
 // Gán các endpoint chung cho các model còn lại
 app.get('/api/users', createGenericEndpoint(User));
 app.get('/api/destinations', createGenericEndpoint(Destination));
@@ -243,7 +378,6 @@ app.get('/api/hotelRooms', createGenericEndpoint(HotelRoom));
 app.get('/api/hotelBookings', createGenericEndpoint(HotelBooking));
 app.get('/api/payments', createGenericEndpoint(Payment));
 app.get('/api/notifications', createGenericEndpoint(Notification));
-
 
 // --- CHẠY SERVER ---
 app.listen(PORT, () => {

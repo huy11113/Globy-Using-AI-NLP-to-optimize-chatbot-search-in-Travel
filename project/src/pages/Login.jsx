@@ -1,279 +1,175 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Github, Twitter } from "lucide-react";
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { loginUser } from '../api/auth';
+import { AuthContext } from '../context/AuthContext';
+import { Plane, Phone, Lock, Eye, EyeOff } from 'lucide-react';
 
-const SignIn1 = () => {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
+// Component for social login buttons
+const SocialLoginButton = ({ icon, text }) => (
+  <button
+    type="button"
+    className="flex-1 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+  >
+    {icon}
+    <span className="ml-2">{text}</span>
+  </button>
+);
+
+const Login = () => {
+  // --- STATE MANAGEMENT ---
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // --- HOOKS ---
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // --- HANDLERS ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const result = await loginUser({ phoneNumber, password });
+      if (result.success) {
+        login(result.data);
+        navigate('/'); // Navigate to homepage after successful login
+      } else {
+        // Use a generic English error message if the backend message is in Vietnamese
+        setError('Invalid phone number or password.');
+      }
+    } catch (err) {
+      setError('Could not connect to the server. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Left side - Form */}
-      <div className="flex w-full flex-col items-center justify-center p-8 lg:w-1/2 lg:p-16">
-        <motion.div
-          className="w-full max-w-md"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="mb-8">
-            <motion.div
-              className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 2L20 7V17L12 22L4 17V7L12 2Z"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </motion.div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-            <p className="mt-2 text-gray-600">
-              Enter your credentials to access your account
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 p-4 pt-20">
+      <div className="relative w-full max-w-4xl flex bg-white shadow-2xl rounded-2xl overflow-hidden">
+        
+        {/* Form Section */}
+        <div className="w-full lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-2 mb-4">
+              <div className="p-2 bg-sky-500 text-white rounded-full">
+                <Plane className="h-6 w-6" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-800">Globy</h1>
+            </Link>
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              Welcome Back!
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in to continue your journey.
             </p>
           </div>
 
-          <form className="space-y-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-1 block text-sm font-medium text-gray-700"
+          {error && (
+            <div className="text-center p-3 mb-6 bg-red-100 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Phone Number Input */}
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input 
+                id="phone-number" 
+                name="phoneNumber" 
+                type="tel" 
+                autoComplete="tel" 
+                required 
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                placeholder="Phone Number" 
+                value={phoneNumber} 
+                onChange={e => setPhoneNumber(e.target.value)} 
+              />
+            </div>
+
+            {/* Password Input */}
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input 
+                id="password-login" 
+                name="password" 
+                type={showPassword ? 'text' : 'password'} 
+                autoComplete="current-password" 
+                required 
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                placeholder="Password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-                placeholder="name@example.com"
-              />
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            <div className="text-sm text-right">
+              <Link to="/forgot-password" className="font-medium text-sky-600 hover:text-sky-500">
+                Forgot password?
+              </Link>
             </div>
 
             <div>
-              <div className="mb-1 flex justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Password
-                </label>
-                <Link
-                  to="#"
-                  className="text-sm text-indigo-600 transition-colors hover:text-indigo-500"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-                placeholder="••••••••"
-              />
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:bg-sky-400 transition-all duration-300"
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </button>
             </div>
-
-            <motion.button
-              type="submit"
-              className="flex w-full items-center justify-center rounded-lg bg-indigo-600 py-3 font-medium text-white"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Sign in
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </motion.button>
           </form>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <motion.button
-                type="button"
-                className="inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Github className="h-5 w-5 text-gray-700" />
-              </motion.button>
-              <motion.button
-                type="button"
-                className="inline-flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Twitter className="h-5 w-5 text-blue-400" />
-              </motion.button>
-            </div>
+          {/* Divider */}
+          <div className="my-8 flex items-center">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="flex-shrink mx-4 text-sm text-gray-500">Or continue with</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+          
+          {/* Social Logins */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <SocialLoginButton icon={<img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5"/>} text="Google" />
+            <SocialLoginButton icon={<img src="https://www.svgrepo.com/show/448224/facebook.svg" alt="Facebook" className="w-5 h-5"/>} text="Facebook" />
           </div>
 
           <p className="mt-8 text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link
-              to="#"
-              className="font-medium text-indigo-600 transition-colors hover:text-indigo-500"
-            >
-              Sign up
+            Don't have an account?{' '}
+            <Link to="/register" className="font-medium text-sky-600 hover:text-sky-500">
+              Sign up now
             </Link>
           </p>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Right side - Illustration */}
-      <div className="hidden w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-700 p-12 lg:flex">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative w-full max-w-lg"
-        >
-          <motion.div
-            className="absolute -left-4 top-0 h-72 w-72 rounded-full bg-purple-300 opacity-70 mix-blend-multiply blur-xl filter"
-            animate={{
-              x: [0, 30, 0],
-              y: [0, 40, 0],
-            }}
-            transition={{
-              repeat: Number.POSITIVE_INFINITY,
-              duration: 8,
-              ease: "easeInOut",
-            }}
+        {/* Image Section */}
+        <div className="hidden lg:block lg:w-1/2 relative">
+          <img 
+            src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop" 
+            alt="Travel background" 
+            className="absolute h-full w-full object-cover"
           />
-          <motion.div
-            className="absolute -right-4 top-0 h-72 w-72 rounded-full bg-indigo-300 opacity-70 mix-blend-multiply blur-xl filter"
-            animate={{
-              x: [0, -20, 0],
-              y: [0, 30, 0],
-            }}
-            transition={{
-              repeat: Number.POSITIVE_INFINITY,
-              duration: 10,
-              ease: "easeInOut",
-            }}
-          />
-          <motion.div
-            className="absolute -bottom-8 left-20 h-72 w-72 rounded-full bg-pink-300 opacity-70 mix-blend-multiply blur-xl filter"
-            animate={{
-              x: [0, 15, 0],
-              y: [0, -20, 0],
-            }}
-            transition={{
-              repeat: Number.POSITIVE_INFINITY,
-              duration: 9,
-              ease: "easeInOut",
-            }}
-          />
-
-          <motion.div
-            className="relative"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <svg
-              width="100%"
-              height="auto"
-              viewBox="0 0 483 322"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M482 159.964C482 248.278 410.736 320 321.868 320C233.001 320 161.736 248.278 161.736 159.964C161.736 71.6503 233.001 0 321.868 0C410.736 0 482 71.6503 482 159.964Z"
-                fill="white"
-                fillOpacity="0.08"
-              />
-              <path
-                d="M321.5 292C392.187 292 450 234.187 450 163.5C450 92.8126 392.187 35 321.5 35C250.813 35 193 92.8126 193 163.5C193 234.187 250.813 292 321.5 292Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M321.5 262C375.348 262 419 218.348 419 164.5C419 110.652 375.348 67 321.5 67C267.652 67 224 110.652 224 164.5C224 218.348 267.652 262 321.5 262Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M321.5 233C359.332 233 390 202.332 390 164.5C390 126.668 359.332 96 321.5 96C283.668 96 253 126.668 253 164.5C253 202.332 283.668 233 321.5 233Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M321.5 205C344.196 205 362.5 186.696 362.5 164C362.5 141.304 344.196 123 321.5 123C298.804 123 280.5 141.304 280.5 164C280.5 186.696 298.804 205 321.5 205Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M321.5 185C333.374 185 343 175.374 343 163.5C343 151.626 333.374 142 321.5 142C309.626 142 300 151.626 300 163.5C300 175.374 309.626 185 321.5 185Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M122 321C189.379 321 244 266.379 244 199C244 131.621 189.379 77 122 77C54.6213 77 0 131.621 0 199C0 266.379 54.6213 321 122 321Z"
-                fill="white"
-                fillOpacity="0.08"
-              />
-              <path
-                d="M122 292C173.362 292 215 250.362 215 199C215 147.638 173.362 106 122 106C70.6375 106 29 147.638 29 199C29 250.362 70.6375 292 122 292Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M122 262C156.794 262 185 233.794 185 199C185 164.206 156.794 136 122 136C87.2065 136 59 164.206 59 199C59 233.794 87.2065 262 122 262Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M122 233C140.778 233 156 217.778 156 199C156 180.222 140.778 165 122 165C103.222 165 88 180.222 88 199C88 217.778 103.222 233 122 233Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-              <path
-                d="M122 205C125.866 205 129 201.866 129 198C129 194.134 125.866 191 122 191C118.134 191 115 194.134 115 198C115 201.866 118.134 205 122 205Z"
-                stroke="white"
-                strokeOpacity="0.2"
-              />
-            </svg>
-          </motion.div>
-
-          <motion.div
-            className="mt-8 text-center text-white"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <h2 className="mb-2 text-2xl font-bold">Secure Authentication</h2>
-            <p className="text-white opacity-80">
-              Your data is protected with enterprise-grade security
-            </p>
-          </motion.div>
-        </motion.div>
+          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+          <div className="absolute inset-0 flex flex-col justify-end p-12 text-white">
+            <h3 className="text-4xl font-bold leading-tight">Explore the world.</h3>
+            <p className="mt-4 text-lg opacity-90">Amazing journeys are waiting for you.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default SignIn1;
+export default Login;

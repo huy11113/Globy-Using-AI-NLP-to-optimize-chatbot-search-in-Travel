@@ -13,7 +13,9 @@ import TourList from './pages/TourList';
 import Destinations from './pages/Destinations';
 import TourDetailPage from './pages/TourDetailPage';
 import ContactPage from './pages/ContactPage'; // ✅ Import trang mới
-
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import WishlistPage from './pages/WishlistPage';
 const App = () => {
   return (
     <Router>
@@ -28,7 +30,10 @@ const App = () => {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/contact" element={<ContactPage />} /> {/* ✅ Thêm route mới */}
+            <Route path="/contact" element={<ContactPage />} /> 
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+           <Route path="/reset-password" element={<ResetPassword />} /> 
+           <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </main>

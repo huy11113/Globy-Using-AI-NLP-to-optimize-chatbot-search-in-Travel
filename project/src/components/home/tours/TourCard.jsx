@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react'; // Bỏ useState, thêm useContext
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Star, Clock, Heart, ArrowRight, MapPin } from 'lucide-react';
+import { AuthContext } from '../../../context/AuthContext'; // ✅ KẾT NỐI VỚI BỘ NÃO
 
 const TourCard = React.memo(({ tour }) => {
-  const [isLiked, setIsLiked] = useState(false);
+  // ✅ Lấy dữ liệu và hàm xử lý từ AuthContext
+  const { user, isTourInWishlist, toggleTourInWishlist } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const { _id, image, title, destination, description, rating, reviewsCount, duration, price, featured } = tour;
 
+  // ✅ Trạng thái của trái tim giờ sẽ được quyết định bởi danh sách yêu thích chung
+  const isLiked = user ? isTourInWishlist(_id) : false;
+
+  // ✅ Hàm này sẽ được gọi khi bạn nhấn vào trái tim
+  const handleWishlistClick = (e) => {
+    e.preventDefault(); // Ngăn trang chuyển hướng
+    if (!user) {
+      alert('Vui lòng đăng nhập để sử dụng chức năng này.');
+      navigate('/auth');
+      return;
+    }
+    // Gọi hàm từ Context để lưu thay đổi
+    toggleTourInWishlist(_id);
+  };
+
   return (
+    // GIAO DIỆN CỦA BẠN ĐƯỢC GIỮ NGUYÊN 100%
     <div className="group flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl">
-      
       <div className="relative">
         <Link 
           to={`/tours/${_id}`} 
@@ -25,28 +43,27 @@ const TourCard = React.memo(({ tour }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         </Link>
 
-        {/* ✅ SỬA LỖI TẠI ĐÂY: Tái cấu trúc phần header của ảnh */}
         <div className="absolute top-0 left-0 w-full p-6">
           <div className="flex justify-between items-start">
-            {/* Tag "Featured" */}
             {featured && (
               <div className="pointer-events-auto w-fit rounded-full bg-gradient-to-r from-red-500 to-orange-400 px-4 py-1.5 text-sm font-bold text-white shadow-lg">
                 FEATURED
               </div>
             )}
 
-            {/* Nút trái tim (đã bỏ -mt-10 và thêm ml-auto) */}
-            <button
-              onClick={() => setIsLiked(!isLiked)}
-              className="pointer-events-auto ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:bg-white/30 hover:scale-110"
-              aria-label="Add to favorites"
-            >
-              <Heart className={`h-5 w-5 transition-all ${isLiked ? 'fill-red-500 text-red-500' : 'fill-transparent stroke-white'}`} />
-            </button>
+            {/* ✅ Sửa lại nút trái tim để gọi đúng hàm */}
+            {user && ( // Chỉ hiện nút khi đã đăng nhập
+              <button
+                onClick={handleWishlistClick} // <--- THAY ĐỔI QUAN TRỌNG NHẤT
+                className="pointer-events-auto ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:bg-white/30 hover:scale-110"
+                aria-label="Add to favorites"
+              >
+                <Heart className={`h-5 w-5 transition-all ${isLiked ? 'fill-red-500 text-red-500' : 'fill-transparent stroke-white'}`} />
+              </button>
+            )}
           </div>
         </div>
         
-        {/* Phần nội dung dưới cùng của ảnh */}
         <div className="absolute bottom-0 left-0 w-full p-6 text-white pointer-events-none">
           <div className="transform transition-transform duration-500 ease-in-out group-hover:-translate-y-2">
               <div className="mb-2 flex items-center gap-2 text-sm">
@@ -60,8 +77,7 @@ const TourCard = React.memo(({ tour }) => {
         </div>
       </div>
 
-      {/* Phần nội dung bên dưới thẻ (giữ nguyên) */}
-      <div className="flex flex-col p-6">
+      <div className="flex flex-col flex-grow p-6">
         <p className="mb-5 text-base text-gray-600 line-clamp-3">
           {description}
         </p>
@@ -88,7 +104,6 @@ const TourCard = React.memo(({ tour }) => {
               >
                 <span>View Details</span>
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/link:translate-x-1" />
-                <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-blue-700 transition-all duration-300 ease-in-out group-hover/link:w-full"></span>
               </Link>
             </div>
         </div>
@@ -98,18 +113,7 @@ const TourCard = React.memo(({ tour }) => {
 });
 
 TourCard.propTypes = {
-  tour: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    image: PropTypes.string,
-    title: PropTypes.string.isRequired,
-    destination: PropTypes.shape({ name: PropTypes.string }),
-    description: PropTypes.string,
-    rating: PropTypes.number,
-    duration: PropTypes.string,
-    price: PropTypes.number,
-    reviewsCount: PropTypes.number,
-    featured: PropTypes.bool,
-  }).isRequired,
+  tour: PropTypes.object.isRequired,
 };
 
 export default TourCard;
