@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema({
   phoneNumber: { type: String, unique: true, sparse: true },
   password: { type: String },
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }],
+  // Thêm lại các trường còn thiếu để không gây lỗi
+  email: { type: String, unique: true, sparse: true },
+  role: { type: String, enum: ['user', 'admin', 'guide'], default: 'user' },
+  avatar: String,
+  resetCode: String,
 }, { timestamps: true });
 
 const destinationSchema = new mongoose.Schema({
@@ -177,7 +182,7 @@ authRouter.post('/login', async (req, res) => {
         if (!user || !await bcrypt.compare(password, user.password)) {
             return res.status(401).json({ success: false, message: 'Số điện thoại hoặc mật khẩu không hợp lệ.' });
         }
-        const { password: _, resetCode: __, ...userData } = user.toObject();
+        const { password: _, ...userData } = user.toObject();
         res.status(200).json({ success: true, message: "Đăng nhập thành công!", data: userData });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
@@ -217,25 +222,10 @@ authRouter.post('/reset-password', async (req, res) => {
     }
 });
 
-authRouter.post('/forgot-password', async (req, res) => {
-    try {
-        // ... (logic tìm người dùng)
-        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-        user.resetCode = resetCode;
-        await user.save();
-        
-        // DÒNG NÀY CHỈ IN MÃ RA CONSOLE, KHÔNG GỬI SMS
-        console.log(`Mã xác nhận cho ${phoneNumber}: ${resetCode}`); 
-        
-        res.status(200).json({ success: true, message: 'Mã xác nhận đã được gửi (kiểm tra console backend).' });
-    } catch (error) {
-      
-    }
-});
-
 app.use('/api/auth', authRouter);
-// Lấy danh sách yêu thích của người dùng
-const wishlistRouter = express.Router();
+
+// ✅ --- API CHO DANH SÁCH YÊU THÍCH ---
+const wishlistRouter = express.Router(); // Định nghĩa router trước khi sử dụng
 
 // Lấy danh sách yêu thích của người dùng
 wishlistRouter.get('/:userId', async (req, res) => {
@@ -243,10 +233,7 @@ wishlistRouter.get('/:userId', async (req, res) => {
         const user = await User.findById(req.params.userId).populate({
             path: 'wishlist',
             model: 'Tour',
-            populate: { // Lấy thêm thông tin destination của tour
-                path: 'destination',
-                model: 'Destination'
-            }
+            populate: { path: 'destinationId', model: 'Destination', select: 'name' }
         });
         if (!user) {
             return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
@@ -269,25 +256,18 @@ wishlistRouter.post('/toggle', async (req, res) => {
 
         const tourIndex = user.wishlist.indexOf(tourId);
         if (tourIndex > -1) {
-            // Nếu tour đã có, xóa đi
             user.wishlist.splice(tourIndex, 1);
         } else {
-            // Nếu tour chưa có, thêm vào
             user.wishlist.push(tourId);
         }
         await user.save();
         
-        // Trả về danh sách wishlist đã được cập nhật đầy đủ thông tin
         const updatedUser = await User.findById(userId).populate({
             path: 'wishlist',
             model: 'Tour',
-             populate: {
-                path: 'destination',
-                model: 'Destination'
-            }
+            populate: { path: 'destinationId', model: 'Destination', select: 'name' }
         });
         res.status(200).json({ success: true, data: updatedUser.wishlist });
-
     } catch (error) {
         console.error("Lỗi toggle wishlist:", error);
         res.status(500).json({ success: false, message: "Lỗi máy chủ." });
@@ -295,7 +275,103 @@ wishlistRouter.post('/toggle', async (req, res) => {
 });
 
 app.use('/api/wishlist', wishlistRouter);
-// === CÁC API HIỆN CÓ CỦA BẠN ===
+// === API CHO ĐỊA ĐIỂM ===
+const destinationRouter = express.Router();
+
+// Lấy tất cả địa điểm
+destinationRouter.get('/', async (req, res) => {
+    try {
+        const destinations = await Destination.find({});
+        res.status(200).json({ success: true, data: destinations });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi máy chủ." });
+    }
+});
+
+// Lấy chi tiết một địa điểm bằng ID
+destinationRouter.get('/:id', async (req, res) => {
+    try {
+        const destination = await Destination.findById(req.params.id);
+        if (!destination) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy địa điểm." });
+        }
+        res.status(200).json({ success: true, data: destination });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi máy chủ." });
+    }
+});
+
+app.use('/api/destinations', destinationRouter);
+// ✅ --- ROUTER MỚI CHO BOOKING & THANH TOÁN ---
+const bookingRouter = express.Router();
+
+// 1. TẠO BOOKING MỚI
+bookingRouter.post('/', async (req, res) => {
+    try {
+        const newBooking = new Booking({
+            ...req.body,
+            status: 'pending' // Luôn bắt đầu với trạng thái chờ
+        });
+        await newBooking.save();
+        res.status(201).json({ 
+            success: true, 
+            message: "Booking đã được tạo, vui lòng tiến hành thanh toán.",
+            data: newBooking 
+        });
+    } catch (error) {
+        console.error("Lỗi khi tạo booking:", error);
+        res.status(500).json({ success: false, message: "Không thể tạo booking." });
+    }
+});
+
+// 2. XỬ LÝ THANH TOÁN CHO BOOKING
+bookingRouter.post('/payment', async (req, res) => {
+    const { bookingId, amount, method } = req.body;
+    
+    try {
+        // Tìm booking tương ứng
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy booking." });
+        }
+
+        // **MÔ PHỎNG THANH TOÁN**
+        // Trong thực tế, đây là nơi bạn gọi API của Stripe, PayPal, MoMo...
+        // Ở đây, chúng ta giả định thanh toán luôn thành công.
+        const isPaymentSuccessful = true; 
+
+        if (isPaymentSuccessful) {
+            // Tạo một bản ghi thanh toán mới
+            const newPayment = new Payment({
+                userId: booking.userId,
+                amount: amount,
+                method: method,
+                status: 'paid',
+                bookingId: booking._id,
+                bookingModel: 'Booking' // Giả sử chỉ thanh toán cho Tour
+            });
+            await newPayment.save();
+
+            // Cập nhật trạng thái booking thành "confirmed"
+            booking.status = 'confirmed';
+            await booking.save();
+
+            res.status(200).json({ success: true, message: "Thanh toán thành công! Chuyến đi của bạn đã được xác nhận." });
+        } else {
+            // Nếu thanh toán thất bại
+            booking.status = 'cancelled';
+            await booking.save();
+            res.status(400).json({ success: false, message: "Thanh toán thất bại, vui lòng thử lại." });
+        }
+    } catch (error) {
+        console.error("Lỗi khi xử lý thanh toán:", error);
+        res.status(500).json({ success: false, message: "Lỗi máy chủ khi thanh toán." });
+    }
+});
+
+app.use('/api/bookings', bookingRouter);
+
+// === CÁC API CŨ CỦA BẠN (GIỮ NGUYÊN) ===
 const createGenericEndpoint = (model) => async (req, res) => {
   try {
     const items = await model.find({});
@@ -333,6 +409,7 @@ app.get('/api/tours', async (req, res) => {
 
     const formattedTours = tours.map(tour => {
         const tourObject = tour.toObject();
+        // Đổi tên destinationId thành destination để khớp với frontend
         tourObject.destination = tourObject.destinationId;
         delete tourObject.destinationId;
         return tourObject;

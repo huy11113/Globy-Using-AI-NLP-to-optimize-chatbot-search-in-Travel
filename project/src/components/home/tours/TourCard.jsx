@@ -1,33 +1,28 @@
-import React, { useContext } from 'react'; // Bỏ useState, thêm useContext
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
 import { Star, Clock, Heart, ArrowRight, MapPin } from 'lucide-react';
-import { AuthContext } from '../../../context/AuthContext'; // ✅ KẾT NỐI VỚI BỘ NÃO
+import { AuthContext } from '../../../context/AuthContext';
 
 const TourCard = React.memo(({ tour }) => {
-  // ✅ Lấy dữ liệu và hàm xử lý từ AuthContext
   const { user, isTourInWishlist, toggleTourInWishlist } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const { _id, image, title, destination, description, rating, reviewsCount, duration, price, featured } = tour;
 
-  // ✅ Trạng thái của trái tim giờ sẽ được quyết định bởi danh sách yêu thích chung
   const isLiked = user ? isTourInWishlist(_id) : false;
 
-  // ✅ Hàm này sẽ được gọi khi bạn nhấn vào trái tim
   const handleWishlistClick = (e) => {
-    e.preventDefault(); // Ngăn trang chuyển hướng
+    e.preventDefault();
     if (!user) {
       alert('Vui lòng đăng nhập để sử dụng chức năng này.');
       navigate('/auth');
       return;
     }
-    // Gọi hàm từ Context để lưu thay đổi
     toggleTourInWishlist(_id);
   };
 
   return (
-    // GIAO DIỆN CỦA BẠN ĐƯỢC GIỮ NGUYÊN 100%
     <div className="group flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl">
       <div className="relative">
         <Link 
@@ -50,11 +45,9 @@ const TourCard = React.memo(({ tour }) => {
                 FEATURED
               </div>
             )}
-
-            {/* ✅ Sửa lại nút trái tim để gọi đúng hàm */}
-            {user && ( // Chỉ hiện nút khi đã đăng nhập
+            {user && (
               <button
-                onClick={handleWishlistClick} // <--- THAY ĐỔI QUAN TRỌNG NHẤT
+                onClick={handleWishlistClick}
                 className="pointer-events-auto ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:bg-white/30 hover:scale-110"
                 aria-label="Add to favorites"
               >

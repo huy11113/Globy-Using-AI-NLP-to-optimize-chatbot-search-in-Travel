@@ -1,10 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom'; // ✅ BƯỚC 1: Import Link
 import { ArrowRight } from 'lucide-react';
 
 const DestinationCard = ({ destination }) => {
   return (
-    <div className="relative group overflow-hidden rounded-xl h-[450px] cursor-pointer shadow-xl">
+    // ✅ BƯỚC 2: Bọc toàn bộ card trong thẻ Link
+    <Link 
+      to={`/destinations/${destination._id}`} 
+      className="relative group block overflow-hidden rounded-xl h-[450px] cursor-pointer shadow-xl"
+    >
       <div
         className="absolute inset-0 bg-cover bg-center w-full h-full transition-all duration-700 ease-in-out group-hover:scale-110"
         style={{ backgroundImage: `url(${destination.image})` }}
@@ -19,20 +24,21 @@ const DestinationCard = ({ destination }) => {
             <p className="text-white/90 text-sm lg:text-base leading-relaxed mb-4 line-clamp-3">
               {destination.description}
             </p>
-            <button className="font-bold text-white flex items-center gap-2 border-b-2 border-blue-400 w-fit pb-1 hover:border-blue-300">
+            {/* Nút này bây giờ chỉ để trang trí vì toàn bộ card đã là một liên kết */}
+            <div className="font-bold text-white flex items-center gap-2 border-b-2 border-blue-400 w-fit pb-1 group-hover:border-blue-300">
               Explore Now
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-            </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Link> // ✅ Đóng thẻ Link
   );
 };
 
 DestinationCard.propTypes = {
   destination: PropTypes.shape({
-    _id: PropTypes.string.isRequired, // ✅ Sửa từ id thành _id
+    _id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,

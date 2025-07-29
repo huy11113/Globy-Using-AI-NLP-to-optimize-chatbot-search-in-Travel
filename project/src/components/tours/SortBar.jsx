@@ -2,11 +2,12 @@ import React from 'react';
 import { LayoutGrid, List } from 'lucide-react';
 
 const SortBar = ({ total, sortBy, onSortChange, loading }) => {
+  // Translated sort options
   const sortOptions = [
-    { label: 'Mới nhất', value: '-createdAt' },
-    { label: 'Đánh giá cao', value: '-rating' },
-    { label: 'Giá: Thấp đến cao', value: 'price' },
-    { label: 'Giá: Cao đến thấp', value: '-price' },
+    { label: 'Newest', value: '-createdAt' },
+    { label: 'Top Rated', value: '-rating' },
+    { label: 'Price: Low to High', value: 'price' },
+    { label: 'Price: High to Low', value: '-price' },
   ];
 
   if (loading) {
@@ -24,7 +25,8 @@ const SortBar = ({ total, sortBy, onSortChange, loading }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
       <p className="text-md text-gray-800 font-semibold mb-4 sm:mb-0">
-        Tìm thấy: {total} tours
+        {/* Translated text */}
+        Found: {total} tours
       </p>
 
       <div className="flex items-center gap-2">
