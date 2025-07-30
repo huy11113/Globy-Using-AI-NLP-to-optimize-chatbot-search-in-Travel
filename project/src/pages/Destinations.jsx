@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 import HeroSection from '../components/destinations/HeroSection';
 import SectionTitle from '../components/destinations/SectionTitle';
-import DestinationCard from '../components/destinations/DestinationCard';
+import DestinationCard from '../components/home/TopDestinations/DestinationCard';
 import useDestinations from '../hooks/useDestinations';
 
 // Skeleton loading
