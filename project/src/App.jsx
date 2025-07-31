@@ -18,7 +18,15 @@ import ResetPassword from './pages/ResetPassword';
 import WishlistPage from './pages/WishlistPage';
 import CheckoutPage from './pages/CheckoutPage';
 import DestinationDetailPage from './pages/DestinationDetailPage';
+// 1. IMPORT CÁC TRANG MỚI CHO ADMIN
+import AdminLoginPage from './admin/AdminLoginPage'; // Trang đăng nhập admin
 
+// Tạo một component tạm thời cho trang Dashboard
+const AdminDashboard = () => (
+    <div className="p-8">
+        <h1 className="text-3xl font-bold text-center">Chào mừng đến trang Quản trị!</h1>
+    </div>
+);
 const App = () => {
   return (
     <Router>
@@ -41,6 +49,9 @@ const App = () => {
             <Route path="*" element={<PageNotFound />} />
             <Route path="/destinations" element={<Destinations />} />
         <Route path="/destinations/:id" element={<DestinationDetailPage />} /> 
+        {/* 2. THÊM CÁC ROUTE MỚI CHO ADMIN */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Routes>
         </main>
         <Footer />

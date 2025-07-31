@@ -35,3 +35,18 @@ export const submitNewPassword = async (data) => {
   });
   return response.json();
 };
+// --- HÀM MỚI CHO ADMIN LOGIN ---
+/**
+ * Gửi yêu cầu đăng nhập cho admin.
+ * @param {object} credentials - Chứa phoneNumber và password.
+ * @returns {Promise<any>}
+ */
+export const loginAdmin = async (credentials) => {
+  // Gọi đến endpoint /admin/login mới
+  const response = await fetch(`${API_URL}/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+  return response.json();
+};
