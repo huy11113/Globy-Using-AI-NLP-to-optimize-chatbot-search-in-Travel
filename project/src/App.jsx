@@ -1,5 +1,6 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthContext } from './context/AuthContext';
 
 // Import các component layout và các trang
 import Header from './components/home/Header';
@@ -12,52 +13,75 @@ import Register from './pages/Register';
 import TourList from './pages/TourList';
 import Destinations from './pages/Destinations';
 import TourDetailPage from './pages/TourDetailPage';
-import ContactPage from './pages/ContactPage'; // ✅ Import trang mới
+import ContactPage from './pages/ContactPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import WishlistPage from './pages/WishlistPage';
 import CheckoutPage from './pages/CheckoutPage';
 import DestinationDetailPage from './pages/DestinationDetailPage';
-// 1. IMPORT CÁC TRANG MỚI CHO ADMIN
-import AdminLoginPage from './admin/AdminLoginPage'; // Trang đăng nhập admin
+import MyTripsPage from './pages/MyTripsPage';
+import BookingRequestPage from './pages/BookingRequestPage';
+import AdminLoginPage from './admin/AdminLoginPage';
+import AdminBookingsPage from './admin/AdminBookingsPage';
 
-// Tạo một component tạm thời cho trang Dashboard
-const AdminDashboard = () => (
-    <div className="p-8">
-        <h1 className="text-3xl font-bold text-center">Chào mừng đến trang Quản trị!</h1>
-    </div>
-);
+// Component bảo vệ các trang yêu cầu đăng nhập
+const PrivateRoute = ({ children }) => {
+    const { user } = useContext(AuthContext);
+    return user ? children : <Navigate to="/login" replace />;
+};
+
+// Component bảo vệ các trang của admin
+const AdminRoute = ({ children }) => {
+    const adminUser = JSON.parse(localStorage.getItem('adminUser'));
+    const adminToken = localStorage.getItem('adminToken');
+    return adminUser && adminUser.role === 'admin' && adminToken 
+        ? children 
+        : <Navigate to="/admin/login" replace />;
+};
+
 const App = () => {
-  return (
-    <Router>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/tours" element={<TourList />} />
-            <Route path="/tours/:id" element={<TourDetailPage />} />
-            <Route path="/destinations" element={<Destinations />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/contact" element={<ContactPage />} /> 
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-           <Route path="/reset-password" element={<ResetPassword />} /> 
-           <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="*" element={<PageNotFound />} />
-            <Route path="/destinations" element={<Destinations />} />
-        <Route path="/destinations/:id" element={<DestinationDetailPage />} /> 
-        {/* 2. THÊM CÁC ROUTE MỚI CHO ADMIN */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
-  );
+    return (
+        <Router>
+            <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-1">
+                    <Routes>
+                        {/* === CÁC ROUTE CÔNG KHAI === */}
+                        <Route path="/" element={<Home />} />
+                        <Route path="/tours" element={<TourList />} />
+                        <Route path="/tours/:id" element={<TourDetailPage />} />
+                        <Route path="/destinations" element={<Destinations />} />
+                        <Route path="/destinations/:id" element={<DestinationDetailPage />} />
+                        <Route path="/blog" element={<BlogPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
+                        
+                        {/* === CÁC ROUTE XÁC THỰC === */}
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+
+                        {/* === CÁC ROUTE CẦN ĐĂNG NHẬP (PRIVATE) === */}
+                        <Route path="/wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
+                        
+                        {/* ✅ SỬA LỖI Ở ĐÂY: Thêm /:bookingId để route có thể nhận ID */}
+                        <Route path="/checkout/:bookingId" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+                        
+                        <Route path="/my-trips" element={<PrivateRoute><MyTripsPage /></PrivateRoute>} />
+                        <Route path="/booking-request" element={<PrivateRoute><BookingRequestPage /></PrivateRoute>} />
+                        
+                        {/* === CÁC ROUTE CHO ADMIN === */}
+                        <Route path="/admin/login" element={<AdminLoginPage />} />
+                        <Route path="/admin/dashboard" element={<AdminRoute><AdminBookingsPage /></AdminRoute>} />
+
+                        {/* === ROUTE DỰ PHÒNG === */}
+                        <Route path="*" element={<PageNotFound />} />
+                    </Routes>
+                </main>
+                <Footer />
+            </div>
+        </Router>
+    );
 };
 
 export default App;
