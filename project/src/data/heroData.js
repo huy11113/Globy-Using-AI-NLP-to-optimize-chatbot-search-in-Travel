@@ -2,7 +2,7 @@
 
 export const slides = [
   {
-    image: 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?q=80&w=1920&h=1080&fit=crop',
+    image: 'https://wallpaperaccess.com/full/229988.jpg',
     category: 'THE METROPOLITAN DREAM',
     title: 'New York City',
     description: 'Feel the pulse of the city that never sleeps. A concrete jungle where dreams are made and legends are born.',

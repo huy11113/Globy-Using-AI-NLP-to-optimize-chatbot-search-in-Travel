@@ -46,3 +46,53 @@ export const rejectBooking = async (bookingId, token) => {
         return { success: false, message: error.message };
     }
 };
+// --- TOUR MANAGEMENT ---
+
+export const createTour = async (tourData, token) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/tours`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Authorization': `Bearer ${token}` // Sẽ cần khi bảo mật
+            },
+            body: JSON.stringify(tourData)
+        });
+        if (!response.ok) throw new Error('Failed to create tour');
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+};
+
+export const updateTour = async (tourId, tourData, token) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/tours/${tourId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(tourData)
+        });
+        if (!response.ok) throw new Error('Failed to update tour');
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+};
+
+export const deleteTour = async (tourId, token) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/tours/${tourId}`, {
+            method: 'DELETE',
+            headers: {
+                // 'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) throw new Error('Failed to delete tour');
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+};

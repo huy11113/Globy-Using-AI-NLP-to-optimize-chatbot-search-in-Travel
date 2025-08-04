@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginAdmin } from '../api/auth'; // Đảm bảo bạn đã có hàm này trong api/auth.js
+import { loginAdmin } from '../../api/auth'; // Đảm bảo bạn đã có hàm này trong api/auth.js
 import { Plane, Phone, Lock } from 'lucide-react';
 
 const AdminLoginPage = () => {

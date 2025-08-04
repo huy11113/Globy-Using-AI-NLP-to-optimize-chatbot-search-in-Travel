@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { getBookingDetails, processPayment } from '../api/booking';
-import { ShieldCheck, User, Mail, Phone, Banknote, Copy, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, User, Mail, Banknote, Copy, ArrowLeft } from 'lucide-react';
 
 // --- COMPONENT PHỤ CHO CÁC LỰA CHỌN THANH TOÁN ---
 const PaymentOption = ({ method, selectedMethod, onSelect, icon, title, subtitle }) => (
@@ -30,8 +30,8 @@ const CheckoutPage = () => {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('momo'); // Mặc định là MoMo
-    const [paymentStep, setPaymentStep] = useState(1); // Bước 1: Chọn, Bước 2: Hiển thị chi tiết
+    const [paymentMethod, setPaymentMethod] = useState('momo'); // Giữ nguyên key, nhưng giờ nó là VietQR
+    const [paymentStep, setPaymentStep] = useState(1);
 
     useEffect(() => {
         if (bookingId) {
@@ -46,10 +46,7 @@ const CheckoutPage = () => {
         }
     }, [bookingId]);
 
-    const handleProceedToPayment = () => {
-        // Chuyển sang bước 2 để hiển thị thông tin chi tiết
-        setPaymentStep(2);
-    };
+    const handleProceedToPayment = () => setPaymentStep(2);
     
     const handleCompletePayment = async () => {
         setLoading(true);
@@ -73,109 +70,122 @@ const CheckoutPage = () => {
         alert(`Đã sao chép: ${text}`);
     };
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><h2>Đang tải...</h2></div>;
+    if (loading) return <div className="flex justify-center items-center h-screen"><h2>Đang tải thông tin thanh toán...</h2></div>;
     if (error || !booking) return <div className="text-center py-24"><h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2><p>{error || "Không tìm thấy đơn đặt tour."}</p></div>;
 
+    // --- TẠO URL CHO MÃ QR ĐỘNG ---
+    // Tạm tính tỉ giá 1 USD = 25,000 VND
+    const amountInVND = Math.round(booking.totalPrice * 25000); 
+    const paymentInfo = `TT ${booking.id.substring(0, 8)}`;
+    const vietQRUrl = `https://api.vietqr.io/image/970436-113366668888-compact.jpg?accountName=CTY%20TNHH%20DU%20LICH%20GLOBY&amount=${amountInVND}&addInfo=${encodeURIComponent(paymentInfo)}`;
+
     return (
-        <section className="bg-slate-50 py-16 md:py-24">
-            <div className="container mx-auto px-4">
-                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
-                    
-                    {/* Cột trái: Thông tin & Lựa chọn thanh toán */}
-                    <div className="lg:col-span-7">
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
-                            {paymentStep === 2 && (
-                                <button onClick={() => setPaymentStep(1)} className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-sky-600 mb-6">
-                                    <ArrowLeft size={16} />
-                                    Quay lại chọn phương thức khác
-                                </button>
-                            )}
-                            <h1 className="text-3xl font-bold mb-6 text-gray-900">Thanh toán đơn hàng</h1>
-
-                            {/* --- STEP 1: CHỌN PHƯƠNG THỨC --- */}
-                            {paymentStep === 1 && (
-                                <>
-                                    <fieldset className="mb-8">
-                                        <legend className="text-lg font-semibold text-gray-800 mb-4">Thông tin người đặt</legend>
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md"><User size={18}/><span>{user?.name}</span></div>
-                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md"><Mail size={18}/><span>{user?.email}</span></div>
-                                        </div>
-                                    </fieldset>
-                                    <fieldset>
-                                        <legend className="text-lg font-semibold text-gray-800 mb-4">Chọn phương thức thanh toán</legend>
-                                        <div className="space-y-4">
-                                            <PaymentOption method="momo" selectedMethod={paymentMethod} onSelect={setPaymentMethod} icon={<img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="momo" className="w-7 h-7"/>} title="Ví điện tử MoMo" subtitle="Quét mã QR để thanh toán."/>
-                                            <PaymentOption method="bank_transfer" selectedMethod={paymentMethod} onSelect={setPaymentMethod} icon={<Banknote className="text-green-500 w-7 h-7"/>} title="Chuyển khoản ngân hàng" subtitle="Chuyển khoản thủ công theo thông tin."/>
-                                        </div>
-                                    </fieldset>
-                                </>
-                            )}
-                            
-                            {/* --- STEP 2: HIỂN THỊ THÔNG TIN CHI TIẾT --- */}
-                            {paymentStep === 2 && paymentMethod === 'momo' && (
-                                <div className="text-center">
-                                    <h3 className="text-xl font-semibold mb-4">Quét mã QR bằng ứng dụng MoMo</h3>
-                                    <img src="https://i.ibb.co/L0SMX8h/qr-momo.png" alt="QR Code MoMo" className="mx-auto w-64 h-64 border p-2 rounded-lg" />
-                                    <p className="mt-4 text-gray-600">Nội dung chuyển khoản:</p>
-                                    <p className="font-bold text-lg font-mono tracking-widest text-red-500">TT {booking.id.substring(0, 8)}</p>
-                                </div>
-                            )}
-
-                            {paymentStep === 2 && paymentMethod === 'bank_transfer' && (
-                                <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                                    <h4 className="font-semibold text-green-800 mb-4 text-xl">Thông tin chuyển khoản</h4>
-                                    <div className="space-y-3 text-sm">
-                                        <div className="flex justify-between items-center py-2 border-b"><span>Ngân hàng:</span> <span className="font-bold">Vietcombank</span></div>
-                                        <div className="flex justify-between items-center py-2 border-b"><span>Chủ tài khoản:</span> <span className="font-bold">CONG TY TNHH DU LICH GLOBY</span></div>
-                                        <div className="flex justify-between items-center py-2 border-b"><span>Số tài khoản:</span> <button onClick={() => copyToClipboard('1234567890')} className="font-bold flex items-center gap-2 hover:text-green-600">1234567890 <Copy size={14}/></button></div>
-                                        <div className="flex justify-between items-center py-2"><span>Nội dung CK:</span> <button onClick={() => copyToClipboard(`TT ${booking.id.substring(0, 8)}`)} className="font-bold font-mono flex items-center gap-2 hover:text-green-600">TT {booking.id.substring(0, 8)} <Copy size={14}/></button></div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Cột phải: Tóm tắt & Nút thanh toán */}
-                    <aside className="lg:col-span-5 lg:sticky top-24 h-fit">
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
-                            <img src={booking.tour.image} alt={booking.tour.title} className="w-full h-40 object-cover rounded-lg mb-6 shadow-md" />
-                            <h3 className="text-xl font-semibold text-gray-800">{booking.tour.title}</h3>
-                            <dl className="space-y-3 text-gray-600 mt-4">
-                                <div className="flex justify-between"><dt>Ngày đi:</dt><dd className="font-medium">{new Date(booking.startDate).toLocaleDateString('vi-VN')}</dd></div>
-                                <div className="flex justify-between"><dt>Số khách:</dt><dd className="font-medium">{booking.people} người</dd></div>
-                                <div className="flex justify-between"><dt>Mã đơn hàng:</dt><dd className="font-mono text-sm">#{booking.id.substring(0, 8).toUpperCase()}</dd></div>
-                            </dl>
-                            <div className="border-t my-6"></div>
-                            <dl className="flex justify-between items-center font-bold text-lg text-gray-900">
-                                <dt>Tổng thanh toán</dt>
-                                <dd className="text-3xl font-extrabold text-sky-600">${booking.totalPrice.toFixed(2)}</dd>
-                            </dl>
-                            
-                            {/* Nút bấm thay đổi tùy theo bước */}
-                            {paymentStep === 1 && (
-                                <button onClick={handleProceedToPayment} className="w-full mt-6 py-3.5 bg-sky-600 text-white font-bold rounded-lg hover:bg-sky-700 transition-all duration-300">
-                                    Xác nhận và Thanh toán
-                                </button>
-                            )}
-
-                            {paymentStep === 2 && (
-                                <button onClick={handleCompletePayment} disabled={loading} className="w-full mt-6 py-3.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-all duration-300">
-                                    {loading ? 'Đang xử lý...' : 'Tôi đã thanh toán'}
-                                </button>
-                            )}
-                            
-                            <div className="flex items-center justify-center mt-4 text-sm text-green-700">
-                                <ShieldCheck size={16} className="mr-2"/>
-                                <span>Thanh toán được mã hóa an toàn</span>
-                            </div>
-                            {error && <p className="text-center text-sm p-3 bg-red-100 text-red-700 rounded-lg mt-4">{error}</p>}
-                        </div>
-                    </aside>
+        <main>
+            {/* --- HERO SECTION MỚI --- */}
+            <section className="relative h-60 bg-cover bg-center" style={{ backgroundImage: "url('https://images.spiderum.com/sp-images/8bbb4170ad1b11ecb24f5b60ba61a646.png')" }}>
+                <div className="absolute inset-0 bg-black/50"></div>
+                <div className="relative h-full flex items-center justify-center">
+                    <h1 className="text-white text-4xl md:text-5xl font-extrabold tracking-tight [text-shadow:2px_2px_4px_rgba(0,0,0,0.6)]">
+                        Thanh Toán An Toàn
+                    </h1>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            {/* --- NỘI DUNG CHÍNH --- */}
+            <section className="bg-slate-50 pb-16 md:pb-24">
+                <div className="container mx-auto px-4 -mt-16 relative z-10">
+                    <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+                        
+                        <div className="lg:col-span-7">
+                            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+                                {paymentStep === 2 && (
+                                    <button onClick={() => setPaymentStep(1)} className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-sky-600 mb-6">
+                                        <ArrowLeft size={16} /> Quay lại
+                                    </button>
+                                )}
+                                
+                                {paymentStep === 1 && (
+                                    <>
+                                        <fieldset className="mb-8">
+                                            <legend className="text-lg font-semibold text-gray-800 mb-4">Thông tin người đặt</legend>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md"><User size={18}/><span>{user?.name}</span></div>
+                                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md"><Mail size={18}/><span>{user?.email}</span></div>
+                                            </div>
+                                        </fieldset>
+                                        <fieldset>
+                                            <legend className="text-lg font-semibold text-gray-800 mb-4">Chọn phương thức thanh toán</legend>
+                                            <div className="space-y-4">
+                                                <PaymentOption method="momo" selectedMethod={paymentMethod} onSelect={setPaymentMethod} icon={<Banknote className="text-sky-500 w-7 h-7"/>} title="Chuyển khoản nhanh (VietQR)" subtitle="Quét mã QR bằng ứng dụng ngân hàng."/>
+                                                <PaymentOption method="bank_transfer" selectedMethod={paymentMethod} onSelect={setPaymentMethod} icon={<Banknote className="text-green-500 w-7 h-7"/>} title="Chuyển khoản thủ công" subtitle="Tự nhập thông tin chuyển khoản."/>
+                                            </div>
+                                        </fieldset>
+                                    </>
+                                )}
+                                
+                                {paymentStep === 2 && paymentMethod === 'momo' && (
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-semibold mb-2">Quét mã bằng ứng dụng Ngân hàng</h3>
+                                        <p className="text-gray-500 mb-4">Hỗ trợ chuyển khoản nhanh 24/7</p>
+                                        <img src={vietQRUrl} alt="QR Code Thanh toán" className="mx-auto w-64 h-64 border-4 border-sky-200 p-2 rounded-lg" />
+                                        <p className="mt-4 text-gray-600">Nội dung chuyển khoản:</p>
+                                        <p className="font-bold text-lg font-mono tracking-widest text-red-500">{paymentInfo}</p>
+                                    </div>
+                                )}
+
+                                {paymentStep === 2 && paymentMethod === 'bank_transfer' && (
+                                    <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                                        <h4 className="font-semibold text-green-800 mb-4 text-xl">Thông tin chuyển khoản</h4>
+                                        <div className="space-y-3 text-sm">
+                                            <div className="flex justify-between items-center py-2 border-b"><span>Ngân hàng:</span> <span className="font-bold">Vietcombank (VCB)</span></div>
+                                            <div className="flex justify-between items-center py-2 border-b"><span>Chủ tài khoản:</span> <span className="font-bold">CTY TNHH DU LICH GLOBY</span></div>
+                                            <div className="flex justify-between items-center py-2 border-b"><span>Số tài khoản:</span> <button onClick={() => copyToClipboard('113366668888')} className="font-bold flex items-center gap-2 hover:text-green-600">113366668888 <Copy size={14}/></button></div>
+                                            <div className="flex justify-between items-center py-2"><span>Nội dung CK:</span> <button onClick={() => copyToClipboard(paymentInfo)} className="font-bold font-mono flex items-center gap-2 hover:text-green-600">{paymentInfo} <Copy size={14}/></button></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <aside className="lg:col-span-5 lg:sticky top-24 h-fit">
+                            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
+                                <img src={booking.tour.image} alt={booking.tour.title} className="w-full h-40 object-cover rounded-lg mb-6 shadow-md" />
+                                <h3 className="text-xl font-semibold text-gray-800">{booking.tour.title}</h3>
+                                <dl className="space-y-3 text-gray-600 mt-4">
+                                    <div className="flex justify-between"><dt>Ngày đi:</dt><dd className="font-medium">{new Date(booking.startDate).toLocaleDateString('vi-VN')}</dd></div>
+                                    <div className="flex justify-between"><dt>Số khách:</dt><dd className="font-medium">{booking.people} người</dd></div>
+                                    <div className="flex justify-between"><dt>Mã đơn hàng:</dt><dd className="font-mono text-sm">#{booking.id.substring(0, 8).toUpperCase()}</dd></div>
+                                </dl>
+                                <div className="border-t my-6"></div>
+                                <dl className="flex justify-between items-center font-bold text-lg text-gray-900">
+                                    <dt>Tổng thanh toán</dt>
+                                    <dd className="text-3xl font-extrabold text-sky-600">${booking.totalPrice.toFixed(2)}</dd>
+                                </dl>
+                                
+                                {paymentStep === 1 && (
+                                    <button onClick={handleProceedToPayment} className="w-full mt-6 py-3.5 bg-sky-600 text-white font-bold rounded-lg hover:bg-sky-700 transition-all duration-300">
+                                        Tiến hành thanh toán
+                                    </button>
+                                )}
+
+                                {paymentStep === 2 && (
+                                    <button onClick={handleCompletePayment} disabled={loading} className="w-full mt-6 py-3.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-all duration-300">
+                                        {loading ? 'Đang xử lý...' : 'Tôi đã thanh toán'}
+                                    </button>
+                                )}
+                                
+                                <div className="flex items-center justify-center mt-4 text-sm text-green-700">
+                                    <ShieldCheck size={16} className="mr-2"/>
+                                    <span>Thanh toán được mã hóa an toàn</span>
+                                </div>
+                                {error && <p className="text-center text-sm p-3 bg-red-100 text-red-700 rounded-lg mt-4">{error}</p>}
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </section>
+        </main>
     );
 };
 
