@@ -50,3 +50,12 @@ export const loginAdmin = async (credentials) => {
   });
   return response.json();
 };
+// HÀM MỚI
+export const loginWithGoogle = async (googleToken) => {
+  const response = await fetch(`${API_URL}/google/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: googleToken }), // Gửi token trong body
+  });
+  return response.json();
+};

@@ -5,7 +5,7 @@ import './index.css';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; // Thay bằng Client ID của bạn
+const GOOGLE_CLIENT_ID = "1005746678859-beku4k7bo55om45do8cnq26q5psm2uei.apps.googleusercontent.com"; // Thay bằng Client ID của bạn
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
