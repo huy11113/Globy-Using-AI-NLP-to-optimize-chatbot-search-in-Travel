@@ -32,6 +32,7 @@ import DashboardPage from '@/admin/pages/DashboardPage'; // Sửa đường dẫ
 import AdminBookingsPage from '@/admin/pages/AdminBookingsPage'; // Sửa đường dẫn
 import AdminToursPage from './admin/pages/AdminToursPage';
 import AdminTourFormPage from './admin/pages/AdminTourFormPage';
+import AdminUsersPage from './admin/pages/AdminUsersPage';
 // --- Route Guards ---
 const PrivateRoute = ({ children }) => {
     const { user } = useContext(AuthContext);
@@ -105,6 +106,8 @@ const App = () => {
                     <Route path="tours" element={<AdminToursPage />} />
                     <Route path="tours/new" element={<AdminTourFormPage />} />
                     <Route path="tours/edit/:id" element={<AdminTourFormPage />} />
+                     <Route path="users" element={<AdminUsersPage />} />
+
 
                 </Route>
 

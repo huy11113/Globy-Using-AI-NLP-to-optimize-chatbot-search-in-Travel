@@ -1,19 +1,20 @@
 const API_URL = 'http://localhost:4000/api/auth';
 
-// Hàm chung để xử lý fetch và lỗi
+// Hàm chung để xử lý fetch và lỗi một cách chuyên nghiệp
 const fetchApi = async (endpoint, options = {}) => {
     try {
         const response = await fetch(`${API_URL}${endpoint}`, options);
         const result = await response.json();
 
         if (!response.ok) {
-            // Nếu server trả về lỗi, ném lỗi với thông báo từ server
+            // Nếu server trả về lỗi (ví dụ: 401 Unauthorized, 400 Bad Request),
+            // ném lỗi với thông báo từ server để component có thể bắt được.
             throw new Error(result.message || 'Đã có lỗi xảy ra.');
         }
         return result;
     } catch (error) {
         console.error(`Lỗi khi gọi API ${endpoint}:`, error);
-        // Trả về một object lỗi nhất quán
+        // Trả về một object lỗi nhất quán để component dễ dàng xử lý.
         return { success: false, message: error.message };
     }
 };
