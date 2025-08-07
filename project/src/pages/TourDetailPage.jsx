@@ -2,16 +2,18 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import useTourDetail from '@/hooks/useTourDetail';
 
-// Import tất cả các component con cần thiết
-import TourBreadcrumb from '@/components/TourDetail/TourBreadcrumb';
-import TourHeader from '@/components/TourDetail/TourHeader';
+// Import các component con
+import TourDetailHero from '@/components/TourDetail/TourDetailHero';
+import TourNavigation from '@/components/TourDetail/TourNavigation';
+import TourHighlights from '@/components/TourDetail/TourHighlights';
 import TourGallery from '@/components/TourDetail/TourGallery';
-import TourOverview from '@/components/TourDetail/TourOverview';
 import TourBookingInfo from '@/components/TourDetail/TourBookingInfo';
-import RelatedTours from '@/components/TourDetail/RelatedTours';
-import FAQSection from '@/components/TourDetail/FAQSection';
 import ItinerarySection from '@/components/TourDetail/ItinerarySection';
-import TourDetailHero from '@/components/TourDetail/TourDetailHero'; // Import Hero mới
+import TourServices from '@/components/TourDetail/TourServices';
+import TourNotes from '@/components/TourDetail/TourNotes';
+import ConsultationForm from '@/components/TourDetail/ConsultationForm';
+import RelatedTours from '@/components/TourDetail/RelatedTours';
+import ReviewSection from '@/components/TourDetail/ReviewSection';
 
 const TourDetailPage = () => {
   const { id: tourId } = useParams();
@@ -20,59 +22,53 @@ const TourDetailPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500"></div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !tour) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-red-600">Lỗi khi tải thông tin tour.</h2>
-        <p className="mt-2 text-gray-600">{error}</p>
-      </div>
-    );
-  }
-  
-  if (!tour) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold">Không tìm thấy tour.</h2>
+      <div className="text-center py-40">
+        <h2 className="text-3xl font-bold text-red-600">Đã xảy ra lỗi</h2>
+        <p className="mt-4 text-gray-600">{error || "Không tìm thấy thông tin chi tiết cho tour này."}</p>
       </div>
     );
   }
 
   return (
-    <main className="bg-gray-50">
-      {/* PHẦN 1: HERO SECTION - Nằm riêng biệt ở trên cùng, không có padding */}
+    <main className="bg-slate-50">
       <TourDetailHero tour={tour} />
       
-      {/* PHẦN 2: NỘI DUNG CHÍNH - Bắt đầu với container có khoảng cách */}
-      <div className="py-12">
+      <div className="py-16">
         <div className="mx-auto max-w-screen-xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            {/* Cột trái chứa tất cả thông tin chi tiết */}
-            <div className="lg:col-span-2 space-y-12">
-              <TourBreadcrumb tour={tour} />
-              <TourHeader tour={tour} />
-              <TourGallery images={tour.images} title={tour.title} />
-              <TourOverview tour={tour} />
-              <ItinerarySection tour={tour} />
-              <FAQSection />
+            {/* CỘT TRÁI (8/12): NỘI DUNG CHÍNH */}
+            <div className="lg:col-span-8 space-y-12">
+              {/* --- ĐÃ THAY ĐỔI THỨ TỰ Ở ĐÂY --- */}
+              <section id="gallery"><TourGallery images={tour.images} title={tour.title} /></section>
+              <section id="highlights"><TourHighlights tour={tour} /></section>
+              <section id="itinerary"><ItinerarySection tour={tour} /></section>
+              <section id="services"><TourServices tour={tour} /></section>
+              <section id="notes"><TourNotes /></section>
+              <section id="reviews"><ReviewSection tourId={tour._id} /></section>
             </div>
 
-            {/* Cột phải chứa sidebar đặt tour */}
-            <div className="lg:col-span-1">
-              <TourBookingInfo tour={tour} />
+            {/* CỘT PHẢI (4/12): SIDEBAR */}
+            <div className="lg:col-span-4">
+                <div className="lg:sticky top-24 space-y-8">
+                    <TourBookingInfo tour={tour} />
+                    <TourNavigation />
+                    <ConsultationForm />
+                </div>
             </div>
           </div>
         </div>
       </div>
       
-      {/* PHẦN 3: TOUR LIÊN QUAN */}
       {tour?.category && (
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 bg-white">
           <RelatedTours category={tour.category} currentTourId={tour._id} />
         </div>
       )}

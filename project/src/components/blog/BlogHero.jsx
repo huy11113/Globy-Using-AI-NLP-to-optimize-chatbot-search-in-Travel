@@ -1,5 +1,9 @@
+// Nhập các thư viện cần thiết
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 
+// Component Hero cho trang Blog
 const BlogHero = () => {
   return (
     <div 
@@ -10,14 +14,24 @@ const BlogHero = () => {
     >
       <div className="text-center text-white px-4">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2">
-          Travel Blog & Stories
+          Blog & Những Câu Chuyện
         </h1>
         <p className="text-lg sm:text-xl opacity-90 max-w-2xl mx-auto">
-          Discover inspiring travel stories, tips, and destinations around the world.
+          Khám phá những câu chuyện du lịch, mẹo và điểm đến đầy cảm hứng trên khắp thế giới.
         </p>
+
+        {/* Breadcrumbs (Thanh điều hướng phân cấp) */}
+        <nav className="mt-8 flex justify-center items-center gap-2 text-sm">
+          <Link to="/" className="opacity-80 hover:opacity-100 transition-opacity">
+            Trang chủ
+          </Link>
+          <span className="opacity-50">&gt;</span>
+          <span className="font-semibold">Blog</span>
+        </nav>
       </div>
     </div>
   );
 };
 
+// Xuất component
 export default BlogHero;

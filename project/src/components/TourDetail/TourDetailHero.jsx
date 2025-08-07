@@ -4,37 +4,31 @@ import { ChevronRight } from 'lucide-react';
 
 const TourDetailHero = ({ tour }) => {
   return (
-    // Section chính, chiếm toàn bộ chiều rộng
-    <section className="relative h-80 flex items-center justify-center text-center text-white overflow-hidden">
+    <section className="relative h-[50vh] md:h-[60vh] text-white bg-black">
       {/* Background Image */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 opacity-60">
         <img
-          src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format=fit=crop"
-          alt="Beautiful travel destination"
+          src={tour.image}
+          alt={`View of ${tour.title}`}
           className="w-full h-full object-cover"
         />
-        {/* Lớp phủ màu tối */}
-        <div className="absolute inset-0 bg-black/50"></div>
       </div>
+      
+      {/* Overlay Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
 
       {/* Content */}
-      <div className="relative z-10 p-6">
-        {/* Breadcrumbs */}
-        <nav className="flex justify-center items-center gap-2 text-sm mb-4">
-          <Link to="/" className="opacity-80 hover:opacity-100 transition-opacity">
-            Home
-          </Link>
-          <ChevronRight className="h-4 w-4 opacity-50" />
-          <Link to="/tours" className="opacity-80 hover:opacity-100 transition-opacity">
-            Tours
-          </Link>
-           <ChevronRight className="h-4 w-4 opacity-50" />
-          <span className="font-semibold truncate max-w-[200px] sm:max-w-none">{tour.title}</span>
-        </nav>
-        
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight [text-shadow:0_2px_4px_rgba(0,0,0,0.5)]">
-          Tour Details
-        </h1>
+      <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-12">
+        <div className="max-w-screen-xl mx-auto w-full">
+            <nav className="flex items-center gap-2 text-sm mb-4">
+              <Link to="/" className="opacity-80 hover:opacity-100 transition-opacity">Trang chủ</Link>
+              <ChevronRight size={16} />
+              <Link to="/tours" className="opacity-80 hover:opacity-100 transition-opacity">Tours</Link>
+            </nav>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight [text-shadow:2px_2px_8px_rgba(0,0,0,0.7)]">
+              {tour.title}
+            </h1>
+        </div>
       </div>
     </section>
   );

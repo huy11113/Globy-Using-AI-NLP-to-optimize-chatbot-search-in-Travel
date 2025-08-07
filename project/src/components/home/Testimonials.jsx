@@ -1,45 +1,47 @@
+// Nhập các thư viện cần thiết
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 
-// Import CSS cho Swiper, bao gồm cả pagination
+// Nhập CSS cho Swiper, bao gồm cả pagination
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-// Dữ liệu mẫu cho các phản hồi
+// Dữ liệu mẫu cho các phản hồi của khách hàng
 const testimonialsData = [
   {
     name: 'Sarah Johnson',
-    role: 'Travel Blogger',
+    role: 'Blogger Du Lịch',
     avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-    text: '"Our trip to Santorini was absolutely magical! Every detail was perfectly planned by Globy. The views, the food, the people... it was an unforgettable experience!"',
+    text: '"Chuyến đi đến Santorini của chúng tôi thật sự kỳ diệu! Mọi chi tiết đều được Globy lên kế hoạch hoàn hảo. Khung cảnh, đồ ăn, con người... đó là một trải nghiệm không thể nào quên!"',
     rating: 5,
   },
   {
     name: 'Michael Chen',
-    role: 'Photographer',
+    role: 'Nhiếp ảnh gia',
     avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-    text: '"The cultural tour in Japan exceeded all my expectations. The local guides were fantastic and showed us so many hidden gems that we would have never found on our own."',
+    text: '"Chuyến đi văn hóa ở Nhật Bản đã vượt xa mọi mong đợi của tôi. Các hướng dẫn viên địa phương thật tuyệt vời và đã chỉ cho chúng tôi rất nhiều viên ngọc ẩn mà chúng tôi sẽ không bao giờ tự tìm thấy."',
     rating: 5,
   },
   {
     name: 'Emma Rodriguez',
-    role: 'Adventurer',
+    role: 'Nhà Thám Hiểm',
     avatar: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-    text: '"An incredible African safari adventure. Globy handled everything seamlessly, from the lodges to the game drives, letting us just enjoy the moment. Highly recommended!"',
+    text: '"Một chuyến phiêu lưu safari ở Châu Phi không thể tin được. Globy đã xử lý mọi thứ một cách liền mạch, từ nhà nghỉ đến các chuyến đi xem thú, giúp chúng tôi chỉ cần tận hưởng khoảnh khắc. Rất khuyến khích!"',
     rating: 5,
   },
   {
     name: 'David Lee',
-    role: 'Family Vacationer',
+    role: 'Du Lịch Gia Đình',
     avatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    text: '"We booked a family package to Italy, and it was perfect. The itinerary was well-balanced for both adults and kids. Thank you, Globy!"',
+    text: '"Chúng tôi đã đặt một gói gia đình đến Ý và nó thật hoàn hảo. Lịch trình được cân bằng tốt cho cả người lớn và trẻ em. Cảm ơn Globy!"',
     rating: 5,
   }
 ];
 
+// Component hiển thị đánh giá bằng sao
 const StarRating = ({ rating }) => (
   <div className="flex items-center gap-0.5">
     {[...Array(5)].map((_, i) => (
@@ -48,13 +50,15 @@ const StarRating = ({ rating }) => (
   </div>
 );
 
+// Component Section Phản hồi của khách hàng
 const Testimonials = () => {
   return (
     <section className="bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-screen-xl px-6 lg:px-8">
+        {/* Lưới chia bố cục thành 2 cột */}
         <div className="grid grid-cols-1 items-center gap-x-16 gap-y-16 lg:grid-cols-5">
           
-          {/* CỘT BÊN TRÁI: HÌNH ẢNH (chiếm 2/5) */}
+          {/* CỘT BÊN TRÁI: HÌNH ẢNH */}
           <motion.div 
             className="lg:col-span-2 h-full w-full"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -64,12 +68,12 @@ const Testimonials = () => {
           >
             <img 
               src="https://images.unsplash.com/photo-1534351590666-13e3e96b5017?q=80&w=1974&auto=format&fit=crop"
-              alt="A collage of happy travel moments"
+              alt="Ảnh ghép những khoảnh khắc du lịch vui vẻ"
               className="aspect-[3/4] w-full rounded-2xl object-cover shadow-2xl ring-1 ring-gray-900/10"
             />
           </motion.div>
 
-          {/* CỘT BÊN PHẢI: NỘI DUNG VÀ SLIDER (chiếm 3/5) */}
+          {/* CỘT BÊN PHẢI: NỘI DUNG VÀ SLIDER */}
           <motion.div 
             className="lg:col-span-3"
             initial={{ opacity: 0, x: 50 }}
@@ -77,14 +81,14 @@ const Testimonials = () => {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             viewport={{ once: true }}
           >
-           
             <h2 className="mt-4 font-serif text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-              Real Stories from Real Travelers
+              Những Câu Chuyện Thật từ Du Khách Thật
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Their journeys, in their own words. Discover why thousands of travelers trust Globy to create their unforgettable memories.
+              Hành trình của họ, qua lời kể của chính họ. Khám phá lý do tại sao hàng ngàn du khách tin tưởng Globy để tạo nên những kỷ niệm khó quên.
             </p>
 
+            {/* Carousel chứa các phản hồi */}
             <div className="mt-12">
               <Swiper
                 modules={[Autoplay, Pagination]}
@@ -116,6 +120,7 @@ const Testimonials = () => {
                   </SwiperSlide>
                 ))}
               </Swiper>
+              {/* Container cho các dấu chấm pagination */}
               <div className="testimonial-pagination-v2 mt-8 flex justify-start gap-2"></div>
             </div>
           </motion.div>
@@ -123,6 +128,7 @@ const Testimonials = () => {
         </div>
       </div>
       
+      {/* CSS tùy chỉnh cho các dấu chấm pagination của Swiper */}
       <style jsx global>{`
         .testimonial-pagination-v2 .swiper-pagination-bullet {
           width: 8px;
@@ -142,4 +148,5 @@ const Testimonials = () => {
   );
 };
 
+// Xuất component
 export default Testimonials;

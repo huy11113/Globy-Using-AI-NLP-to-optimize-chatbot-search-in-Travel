@@ -1,9 +1,10 @@
+// Nhập các thư viện cần thiết
 import React from 'react';
 import { Search, Star, RotateCcw, Filter as FilterIcon } from 'lucide-react';
 
-// --- COMPONENT CON ---
+// --- CÁC COMPONENT CON ---
 
-// Component Section chung
+// Component Section chung cho mỗi bộ lọc
 const FilterSection = ({ title, children, className = '' }) => (
     <div className={`py-6 border-b border-gray-200 ${className}`}>
         <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">{title}</h4>
@@ -11,7 +12,7 @@ const FilterSection = ({ title, children, className = '' }) => (
     </div>
 );
 
-// Nút bấm cho Checkbox (chọn nhiều)
+// Nút bấm dạng Checkbox (cho phép chọn nhiều)
 const CheckboxButton = ({ label, name, value, checked, onChange }) => (
     <>
         <input
@@ -36,7 +37,7 @@ const CheckboxButton = ({ label, name, value, checked, onChange }) => (
     </>
 );
 
-// Nút bấm cho Radio (chọn một)
+// Nút bấm dạng Radio (chỉ cho phép chọn một)
 const RadioButton = ({ label, name, value, checked, onChange }) => (
      <>
         <input
@@ -62,31 +63,35 @@ const RadioButton = ({ label, name, value, checked, onChange }) => (
 );
 
 
-// --- COMPONENT CHÍNH ---
+// --- COMPONENT CHÍNH: THANH LỌC ---
 const FilterSidebar = ({ filters, onFilterChange, onResetFilters, loading }) => {
   
+    // Xử lý thay đổi cho các input thông thường (text, range, radio)
     const handleInputChange = (e) => {
         const { name, value, type } = e.target;
+        // Nếu là thanh trượt giá và giá trị là 0, coi như không lọc
         const finalValue = type === 'range' && value === '0' ? '' : value;
         onFilterChange(name, finalValue);
     };
 
+    // Xử lý thay đổi cho checkbox (chọn nhiều)
     const handleCheckboxChange = (e) => {
         const { name, value, checked } = e.target;
         const currentValues = filters[name] ? filters[name].split(',') : [];
         let newValues = checked
-            ? [...currentValues, value]
-            : currentValues.filter(item => item !== value);
+            ? [...currentValues, value] // Thêm giá trị nếu được chọn
+            : currentValues.filter(item => item !== value); // Bỏ giá trị nếu bỏ chọn
         onFilterChange(name, newValues.join(','));
     };
 
+    // Kiểm tra xem có bộ lọc nào đang được áp dụng không
     const hasActiveFilters = Object.values(filters).some(value => value && value.length > 0 && value !== '0');
 
-    // Dữ liệu mẫu
-    const durationOptions = ["1-3 Days", "4-7 Days", "8-14 Days", "15+ Days"];
-    const categoryOptions = ["Adventure", "Cultural", "Beach", "Family", "Relaxation"];
+    // Dữ liệu mẫu cho các tùy chọn lọc
+    const durationOptions = ["1-3 Ngày", "4-7 Ngày", "8-14 Ngày", "15+ Ngày"];
+    const categoryOptions = ["Phiêu lưu", "Văn hóa", "Bãi biển", "Gia đình", "Nghỉ dưỡng"];
 
-    // Skeleton khi đang tải
+    // Giao diện "khung xương" khi đang tải
     if (loading) {
         return (
             <aside className="lg:w-80 lg:flex-shrink-0 lg:sticky top-24">
@@ -113,15 +118,17 @@ const FilterSidebar = ({ filters, onFilterChange, onResetFilters, loading }) => 
         <aside className="lg:w-80 lg:flex-shrink-0 lg:sticky top-24 h-fit">
             <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
                 
+                {/* Tiêu đề và nút Reset */}
                 <div className="flex justify-between items-center pb-4 border-b border-gray-200">
                     <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2"><FilterIcon size={20}/> Bộ lọc</h3>
                     {hasActiveFilters && (
                         <button onClick={onResetFilters} className="flex items-center gap-1.5 text-sm font-medium text-sky-600 hover:text-sky-800 transition-colors">
-                            <RotateCcw className="h-4 w-4" /> Reset
+                            <RotateCcw className="h-4 w-4" /> Đặt lại
                         </button>
                     )}
                 </div>
 
+                {/* Các section lọc */}
                 <div className="divide-y divide-gray-200">
                     <FilterSection title="Từ khóa">
                         <div className="relative">
@@ -136,14 +143,14 @@ const FilterSidebar = ({ filters, onFilterChange, onResetFilters, loading }) => 
 
                     <FilterSection title="Khoảng giá">
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-gray-500">$0</span>
+                            <span className="text-sm text-gray-500">0đ</span>
                             <span className="px-3 py-1 text-sm font-bold text-sky-800 bg-sky-100 rounded-full">
-                                Lên đến ${filters.maxPrice || '5000+'}
+                                Lên đến {new Intl.NumberFormat('vi-VN').format(filters.maxPrice || '125000000')}{filters.maxPrice ? 'đ' : '+'}
                             </span>
-                            <span className="text-sm text-gray-500">$5000</span>
+                            <span className="text-sm text-gray-500">125Tr+</span>
                         </div>
                         <input
-                            type="range" id="maxPrice" name="maxPrice" min="0" max="5000" step="100"
+                            type="range" id="maxPrice" name="maxPrice" min="0" max="125000000" step="2500000"
                             value={filters.maxPrice || 0} onChange={handleInputChange}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-thumb"
                         />
@@ -171,7 +178,7 @@ const FilterSidebar = ({ filters, onFilterChange, onResetFilters, loading }) => 
                     </FilterSection>
 
                     <FilterSection title="Loại hình tour" className="border-b-0">
-                        <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                             {categoryOptions.map(category => (
                                 <RadioButton key={category} label={category} name="category" value={category} onChange={handleInputChange} checked={filters.category === category} />
                             ))}
@@ -183,4 +190,5 @@ const FilterSidebar = ({ filters, onFilterChange, onResetFilters, loading }) => 
     );
 };
 
+// Xuất component
 export default FilterSidebar;

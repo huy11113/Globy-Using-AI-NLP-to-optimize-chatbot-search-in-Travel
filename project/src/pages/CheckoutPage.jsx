@@ -1,88 +1,96 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { getBookingDetails, processPayment } from '../api/booking';
-import { ShieldCheck, User, Mail, Banknote, Copy, ArrowLeft } from 'lucide-react';
-
-// --- COMPONENT PHỤ CHO CÁC LỰA CHỌN THANH TOÁN ---
-const PaymentOption = ({ method, selectedMethod, onSelect, icon, title, subtitle }) => (
-    <div 
-        onClick={() => onSelect(method)} 
-        className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${selectedMethod === method ? 'border-sky-500 bg-sky-50 ring-2 ring-sky-200' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-    >
-        {icon}
-        <div className="flex-grow ml-4">
-            <h3 className="font-semibold text-gray-800">{title}</h3>
-            <p className="text-sm text-gray-500">{subtitle}</p>
-        </div>
-        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedMethod === method ? 'border-sky-500 bg-sky-500' : 'border-gray-300'}`}>
-            {selectedMethod === method && <div className="w-2 h-2 bg-white rounded-full"></div>}
-        </div>
-    </div>
-);
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getBookingDetails } from '../api/booking';
+import { ShieldCheck } from 'lucide-react';
 
 // --- COMPONENT CHÍNH ---
 const CheckoutPage = () => {
     const { bookingId } = useParams();
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext);
 
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('momo'); // Giữ nguyên key, nhưng giờ nó là VietQR
-    const [paymentStep, setPaymentStep] = useState(1);
+    const [checkoutUrl, setCheckoutUrl] = useState('');
+    const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
-    useEffect(() => {
-        if (bookingId) {
-            const fetchBooking = async () => {
-                setLoading(true);
-                const result = await getBookingDetails(bookingId);
-                if (result.success) setBooking(result.data);
-                else setError(result.message);
-                setLoading(false);
-            };
-            fetchBooking();
+    // --- HÀM TẠO LINK THANH TOÁN (GỌI LÊN BACKEND) ---
+    const createPaymentLink = useCallback(async () => {
+        if (!bookingId) return;
+        try {
+            const response = await fetch('http://localhost:4000/api/payment/create-payment-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId }),
+            });
+            const result = await response.json();
+            if (result.success) {
+                setCheckoutUrl(result.checkoutUrl);
+            } else {
+                setError(result.message || "Không thể tạo link thanh toán.");
+            }
+        } catch (err) {
+            setError("Lỗi kết nối khi tạo link thanh toán. Vui lòng đảm bảo backend đang chạy.");
         }
     }, [bookingId]);
-
-    const handleProceedToPayment = () => setPaymentStep(2);
     
-    const handleCompletePayment = async () => {
-        setLoading(true);
-        setError('');
-        const result = await processPayment({
-            bookingId: booking.id,
-            amount: booking.totalPrice,
-            method: paymentMethod,
-        });
-        setLoading(false);
-        if (result.success) {
-            alert(result.message);
-            navigate('/my-trips');
-        } else {
-            setError(result.message || 'Xác nhận thanh toán thất bại.');
+    // --- LẤY THÔNG TIN BOOKING KHI VÀO TRANG ---
+    useEffect(() => {
+        const fetchBooking = async () => {
+            setLoading(true);
+            const result = await getBookingDetails(bookingId);
+            if (result.success) {
+                if (result.data.status !== 'approved') {
+                    alert("Đơn hàng này không cần thanh toán hoặc đã được xử lý.");
+                    navigate('/my-trips');
+                } else {
+                    setBooking(result.data);
+                }
+            } else {
+                setError(result.message);
+            }
+            setLoading(false);
+        };
+        fetchBooking();
+    }, [bookingId, navigate]);
+    
+    // --- TẠO LINK THANH TOÁN SAU KHI CÓ THÔNG TIN BOOKING ---
+    useEffect(() => {
+        if (booking) {
+            createPaymentLink();
         }
-    }
+    }, [booking, createPaymentLink]);
 
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
-        alert(`Đã sao chép: ${text}`);
-    };
+    // --- POLLING: TỰ ĐỘNG KIỂM TRA TRẠNG THÁI ĐƠN HÀNG ---
+    useEffect(() => {
+        if (checkoutUrl) {
+            setIsCheckingStatus(true);
+            const intervalId = setInterval(async () => {
+                const result = await getBookingDetails(bookingId);
+                // Nếu backend xác nhận đã thanh toán
+                if (result.success && result.data.status === 'confirmed') {
+                    clearInterval(intervalId); // Dừng việc kiểm tra
+                    setIsCheckingStatus(false);
+                    alert("Thanh toán thành công! Chuyến đi của bạn đã được xác nhận.");
+                    navigate('/my-trips'); // Chuyển hướng người dùng
+                }
+            }, 5000); // Lặp lại việc kiểm tra mỗi 5 giây
+
+            return () => clearInterval(intervalId); // Dọn dẹp khi rời khỏi trang
+        }
+    }, [checkoutUrl, bookingId, navigate]);
+
 
     if (loading) return <div className="flex justify-center items-center h-screen"><h2>Đang tải thông tin thanh toán...</h2></div>;
     if (error || !booking) return <div className="text-center py-24"><h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2><p>{error || "Không tìm thấy đơn đặt tour."}</p></div>;
-
-    // --- TẠO URL CHO MÃ QR ĐỘNG ---
-    // Tạm tính tỉ giá 1 USD = 25,000 VND
-    const amountInVND = Math.round(booking.totalPrice * 25000); 
-    const paymentInfo = `TT ${booking.id.substring(0, 8)}`;
-    const vietQRUrl = `https://api.vietqr.io/image/970436-113366668888-compact.jpg?accountName=CTY%20TNHH%20DU%20LICH%20GLOBY&amount=${amountInVND}&addInfo=${encodeURIComponent(paymentInfo)}`;
+    
+    const amountInVND = Math.round(booking.totalPrice * 25450);
+    // URL để nhúng iframe hiển thị QR của PayOS
+    const qrCodeUrl = checkoutUrl ? checkoutUrl.replace('/vietqr', '/vietqr/show') : '';
 
     return (
         <main>
-            {/* --- HERO SECTION MỚI --- */}
-            <section className="relative h-60 bg-cover bg-center" style={{ backgroundImage: "url('https://images.spiderum.com/sp-images/8bbb4170ad1b11ecb24f5b60ba61a646.png')" }}>
+             <section className="relative h-60 bg-cover bg-center" style={{ backgroundImage: "url('https://images.spiderum.com/sp-images/8bbb4170ad1b11ecb24f5b60ba61a646.png')" }}>
                 <div className="absolute inset-0 bg-black/50"></div>
                 <div className="relative h-full flex items-center justify-center">
                     <h1 className="text-white text-4xl md:text-5xl font-extrabold tracking-tight [text-shadow:2px_2px_4px_rgba(0,0,0,0.6)]">
@@ -90,96 +98,45 @@ const CheckoutPage = () => {
                     </h1>
                 </div>
             </section>
-
-            {/* --- NỘI DUNG CHÍNH --- */}
-            <section className="bg-slate-50 pb-16 md:pb-24">
+             <section className="bg-slate-50 pb-16 md:pb-24">
                 <div className="container mx-auto px-4 -mt-16 relative z-10">
                     <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
-                        
                         <div className="lg:col-span-7">
-                            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
-                                {paymentStep === 2 && (
-                                    <button onClick={() => setPaymentStep(1)} className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-sky-600 mb-6">
-                                        <ArrowLeft size={16} /> Quay lại
-                                    </button>
-                                )}
-                                
-                                {paymentStep === 1 && (
-                                    <>
-                                        <fieldset className="mb-8">
-                                            <legend className="text-lg font-semibold text-gray-800 mb-4">Thông tin người đặt</legend>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md"><User size={18}/><span>{user?.name}</span></div>
-                                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md"><Mail size={18}/><span>{user?.email}</span></div>
-                                            </div>
-                                        </fieldset>
-                                        <fieldset>
-                                            <legend className="text-lg font-semibold text-gray-800 mb-4">Chọn phương thức thanh toán</legend>
-                                            <div className="space-y-4">
-                                                <PaymentOption method="momo" selectedMethod={paymentMethod} onSelect={setPaymentMethod} icon={<Banknote className="text-sky-500 w-7 h-7"/>} title="Chuyển khoản nhanh (VietQR)" subtitle="Quét mã QR bằng ứng dụng ngân hàng."/>
-                                                <PaymentOption method="bank_transfer" selectedMethod={paymentMethod} onSelect={setPaymentMethod} icon={<Banknote className="text-green-500 w-7 h-7"/>} title="Chuyển khoản thủ công" subtitle="Tự nhập thông tin chuyển khoản."/>
-                                            </div>
-                                        </fieldset>
-                                    </>
-                                )}
-                                
-                                {paymentStep === 2 && paymentMethod === 'momo' && (
-                                    <div className="text-center">
-                                        <h3 className="text-xl font-semibold mb-2">Quét mã bằng ứng dụng Ngân hàng</h3>
-                                        <p className="text-gray-500 mb-4">Hỗ trợ chuyển khoản nhanh 24/7</p>
-                                        <img src={vietQRUrl} alt="QR Code Thanh toán" className="mx-auto w-64 h-64 border-4 border-sky-200 p-2 rounded-lg" />
-                                        <p className="mt-4 text-gray-600">Nội dung chuyển khoản:</p>
-                                        <p className="font-bold text-lg font-mono tracking-widest text-red-500">{paymentInfo}</p>
+                            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 text-center">
+                                <h3 className="text-xl font-semibold mb-2">Quét mã để thanh toán</h3>
+                                <p className="text-gray-500 mb-4">Sử dụng ứng dụng Ngân hàng hoặc Ví điện tử để quét mã VietQR.</p>
+                                {qrCodeUrl ? (
+                                    <iframe 
+                                        src={qrCodeUrl}
+                                        className="mx-auto w-[300px] h-[400px] md:w-[400px] md:h-[500px] border-none rounded-lg"
+                                        title="PayOS QR Code"
+                                    />
+                                ) : (
+                                    <div className="mx-auto w-[300px] h-[400px] md:w-[400px] md:h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
+                                        <p className="text-gray-600">{error ? error : "Đang tạo mã thanh toán..."}</p>
                                     </div>
                                 )}
-
-                                {paymentStep === 2 && paymentMethod === 'bank_transfer' && (
-                                    <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                                        <h4 className="font-semibold text-green-800 mb-4 text-xl">Thông tin chuyển khoản</h4>
-                                        <div className="space-y-3 text-sm">
-                                            <div className="flex justify-between items-center py-2 border-b"><span>Ngân hàng:</span> <span className="font-bold">Vietcombank (VCB)</span></div>
-                                            <div className="flex justify-between items-center py-2 border-b"><span>Chủ tài khoản:</span> <span className="font-bold">CTY TNHH DU LICH GLOBY</span></div>
-                                            <div className="flex justify-between items-center py-2 border-b"><span>Số tài khoản:</span> <button onClick={() => copyToClipboard('113366668888')} className="font-bold flex items-center gap-2 hover:text-green-600">113366668888 <Copy size={14}/></button></div>
-                                            <div className="flex justify-between items-center py-2"><span>Nội dung CK:</span> <button onClick={() => copyToClipboard(paymentInfo)} className="font-bold font-mono flex items-center gap-2 hover:text-green-600">{paymentInfo} <Copy size={14}/></button></div>
-                                        </div>
+                                {isCheckingStatus && (
+                                    <div className="mt-4 flex items-center justify-center gap-2 text-sky-600">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-sky-500"></div>
+                                        <span>Đang chờ xác nhận thanh toán...</span>
                                     </div>
                                 )}
                             </div>
                         </div>
-
                         <aside className="lg:col-span-5 lg:sticky top-24 h-fit">
-                            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+                             <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
-                                <img src={booking.tour.image} alt={booking.tour.title} className="w-full h-40 object-cover rounded-lg mb-6 shadow-md" />
                                 <h3 className="text-xl font-semibold text-gray-800">{booking.tour.title}</h3>
-                                <dl className="space-y-3 text-gray-600 mt-4">
-                                    <div className="flex justify-between"><dt>Ngày đi:</dt><dd className="font-medium">{new Date(booking.startDate).toLocaleDateString('vi-VN')}</dd></div>
-                                    <div className="flex justify-between"><dt>Số khách:</dt><dd className="font-medium">{booking.people} người</dd></div>
-                                    <div className="flex justify-between"><dt>Mã đơn hàng:</dt><dd className="font-mono text-sm">#{booking.id.substring(0, 8).toUpperCase()}</dd></div>
-                                </dl>
                                 <div className="border-t my-6"></div>
                                 <dl className="flex justify-between items-center font-bold text-lg text-gray-900">
                                     <dt>Tổng thanh toán</dt>
-                                    <dd className="text-3xl font-extrabold text-sky-600">${booking.totalPrice.toFixed(2)}</dd>
+                                    <dd className="text-3xl font-extrabold text-sky-600">{amountInVND.toLocaleString('vi-VN')} VNĐ</dd>
                                 </dl>
-                                
-                                {paymentStep === 1 && (
-                                    <button onClick={handleProceedToPayment} className="w-full mt-6 py-3.5 bg-sky-600 text-white font-bold rounded-lg hover:bg-sky-700 transition-all duration-300">
-                                        Tiến hành thanh toán
-                                    </button>
-                                )}
-
-                                {paymentStep === 2 && (
-                                    <button onClick={handleCompletePayment} disabled={loading} className="w-full mt-6 py-3.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-all duration-300">
-                                        {loading ? 'Đang xử lý...' : 'Tôi đã thanh toán'}
-                                    </button>
-                                )}
-                                
                                 <div className="flex items-center justify-center mt-4 text-sm text-green-700">
                                     <ShieldCheck size={16} className="mr-2"/>
-                                    <span>Thanh toán được mã hóa an toàn</span>
+                                    <span>Thanh toán được mã hóa an toàn qua PayOS</span>
                                 </div>
-                                {error && <p className="text-center text-sm p-3 bg-red-100 text-red-700 rounded-lg mt-4">{error}</p>}
                             </div>
                         </aside>
                     </div>
