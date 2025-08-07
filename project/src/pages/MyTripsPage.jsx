@@ -21,9 +21,7 @@ const CommonHeroSection = ({ title }) => (
 const MyTripsPage = () => {
     const { user } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
-    
-    // <<< THAY ĐỔI: Thêm state để quản lý tab và các danh sách booking
-    const [activeTab, setActiveTab] = useState('inProgress'); // 'inProgress' hoặc 'completed'
+    const [activeTab, setActiveTab] = useState('inProgress');
     const [inProgressBookings, setInProgressBookings] = useState([]);
     const [completedBookings, setCompletedBookings] = useState([]);
 
@@ -36,7 +34,6 @@ const MyTripsPage = () => {
                 if (result.success) {
                     const sortedBookings = result.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                     
-                    // <<< THAY ĐỔI: Lọc booking ra 2 danh sách
                     const inProgress = sortedBookings.filter(b => b.status === 'pending_approval' || b.status === 'approved');
                     const completed = sortedBookings.filter(b => b.status === 'confirmed' || b.status === 'rejected');
                     
@@ -51,7 +48,6 @@ const MyTripsPage = () => {
         }
     }, [user]);
 
-    // ... (Hàm getStatusInfo, loading, not user giữ nguyên)
     const getStatusInfo = (status) => {
         switch (status) {
             case 'pending_approval':
@@ -88,7 +84,16 @@ const MyTripsPage = () => {
                         <p className="flex items-center gap-2"><MapPin size={16} className="text-gray-400"/> <strong>Điểm đi:</strong> {booking.tour?.startLocation}</p>
                         <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400"/> <strong>Ngày đi:</strong> {new Date(booking.startDate).toLocaleDateString('vi-VN')}</p>
                         <p className="flex items-center gap-2"><Users size={16} className="text-gray-400"/> <strong>Số khách:</strong> {booking.people}</p>
-                        <p className="flex items-center gap-2"><DollarSign size={16} className="text-gray-400"/> <strong>Chi phí:</strong> <span className="font-bold text-gray-800">${booking.totalPrice?.toFixed(2)}</span></p>
+                        
+                        {/* ✅ THAY ĐỔI TẠI ĐÂY: Sửa lại cách hiển thị giá tiền */}
+                        <p className="flex items-center gap-2">
+                            <DollarSign size={16} className="text-gray-400"/> 
+                            <strong>Chi phí:</strong> 
+                            <span className="font-bold text-gray-800">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(booking.totalPrice || 0)}
+                            </span>
+                        </p>
+
                     </div>
                     <div className="mt-auto pt-4 border-t border-gray-100">
                          {booking.status === 'approved' && (
@@ -126,7 +131,6 @@ const MyTripsPage = () => {
                         </div>
                     ) : (
                         <div>
-                            {/* --- THANH TABS --- */}
                             <div className="mb-8 flex justify-center border-b">
                                 <button onClick={() => setActiveTab('inProgress')} className={`flex items-center gap-2 px-6 py-3 font-semibold border-b-2 transition-colors ${activeTab === 'inProgress' ? 'border-sky-500 text-sky-600' : 'border-transparent text-gray-500 hover:border-gray-300'}`}>
                                     <ListChecks size={20} /> Đang tiến hành ({inProgressBookings.length})
@@ -136,7 +140,6 @@ const MyTripsPage = () => {
                                 </button>
                             </div>
 
-                            {/* --- NỘI DUNG TABS --- */}
                             <div className="grid gap-8">
                                 {activeTab === 'inProgress' && (
                                     inProgressBookings.length > 0

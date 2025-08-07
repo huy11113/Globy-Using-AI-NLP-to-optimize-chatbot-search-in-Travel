@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBookingDetails } from '../api/booking';
-import { ShieldCheck } from 'lucide-react';
+// ✅ SỬA LỖI: Thay thế LoaderCircle bằng Loader2
+import { ShieldCheck, Loader2 } from 'lucide-react';
 
 // --- COMPONENT CHÍNH ---
 const CheckoutPage = () => {
@@ -27,7 +28,7 @@ const CheckoutPage = () => {
             if (result.success) {
                 setCheckoutUrl(result.checkoutUrl);
             } else {
-                setError(result.message || "Không thể tạo link thanh toán.");
+                setError(result.message || "Không thể tạo link thanh toán. Vui lòng thử lại.");
             }
         } catch (err) {
             setError("Lỗi kết nối khi tạo link thanh toán. Vui lòng đảm bảo backend đang chạy.");
@@ -39,7 +40,7 @@ const CheckoutPage = () => {
         const fetchBooking = async () => {
             setLoading(true);
             const result = await getBookingDetails(bookingId);
-            if (result.success) {
+            if (result.success && result.data) {
                 if (result.data.status !== 'approved') {
                     alert("Đơn hàng này không cần thanh toán hoặc đã được xử lý.");
                     navigate('/my-trips');
@@ -47,7 +48,7 @@ const CheckoutPage = () => {
                     setBooking(result.data);
                 }
             } else {
-                setError(result.message);
+                setError(result.message || "Không thể tải thông tin đơn hàng.");
             }
             setLoading(false);
         };
@@ -67,25 +68,39 @@ const CheckoutPage = () => {
             setIsCheckingStatus(true);
             const intervalId = setInterval(async () => {
                 const result = await getBookingDetails(bookingId);
-                // Nếu backend xác nhận đã thanh toán
                 if (result.success && result.data.status === 'confirmed') {
-                    clearInterval(intervalId); // Dừng việc kiểm tra
+                    clearInterval(intervalId);
                     setIsCheckingStatus(false);
                     alert("Thanh toán thành công! Chuyến đi của bạn đã được xác nhận.");
-                    navigate('/my-trips'); // Chuyển hướng người dùng
+                    navigate('/my-trips');
                 }
-            }, 5000); // Lặp lại việc kiểm tra mỗi 5 giây
+            }, 5000);
 
-            return () => clearInterval(intervalId); // Dọn dẹp khi rời khỏi trang
+            return () => clearInterval(intervalId);
         }
     }, [checkoutUrl, bookingId, navigate]);
 
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><h2>Đang tải thông tin thanh toán...</h2></div>;
-    if (error || !booking) return <div className="text-center py-24"><h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2><p>{error || "Không tìm thấy đơn đặt tour."}</p></div>;
+    if (loading) {
+        return (
+            <div className="flex flex-col justify-center items-center h-screen">
+                {/* ✅ SỬA LỖI: Thay thế LoaderCircle bằng Loader2 */}
+                <Loader2 className="animate-spin text-sky-500" size={48} />
+                <h2 className="mt-4 text-lg font-semibold text-gray-700">Đang tải thông tin thanh toán...</h2>
+            </div>
+        );
+    }
     
-    const amountInVND = Math.round(booking.totalPrice * 25450);
-    // URL để nhúng iframe hiển thị QR của PayOS
+    if (error || !booking) {
+        return (
+            <div className="text-center py-24">
+                <h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2>
+                <p>{error || "Không tìm thấy đơn đặt tour."}</p>
+            </div>
+        );
+    }
+    
+    const amountInVND = booking.totalPrice || 0;
     const qrCodeUrl = checkoutUrl ? checkoutUrl.replace('/vietqr', '/vietqr/show') : '';
 
     return (
@@ -113,7 +128,17 @@ const CheckoutPage = () => {
                                     />
                                 ) : (
                                     <div className="mx-auto w-[300px] h-[400px] md:w-[400px] md:h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
-                                        <p className="text-gray-600">{error ? error : "Đang tạo mã thanh toán..."}</p>
+                                        <div className="text-center">
+                                            {error ? (
+                                                <p className="text-red-600">{error}</p>
+                                            ) : (
+                                                <>
+                                                    {/* ✅ SỬA LỖI: Thay thế LoaderCircle bằng Loader2 */}
+                                                    <Loader2 className="animate-spin text-sky-500 mx-auto" size={32} />
+                                                    <p className="text-gray-600 mt-2">Đang tạo mã thanh toán...</p>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                                 {isCheckingStatus && (
