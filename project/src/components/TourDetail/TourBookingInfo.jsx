@@ -13,8 +13,9 @@ const TourBookingInfo = ({ tour }) => {
     const [children, setChildren] = useState(0);
 
     const guestCount = adults + children;
-    const exchangeRate = 25450;
-    const priceInVND = tour.price * exchangeRate;
+    
+    // ✅ THAY ĐỔI: Giả định tour.price đã là VNĐ, không cần quy đổi
+    const priceInVND = tour.price; 
     const totalCostInVND = priceInVND * guestCount;
 
     useEffect(() => {
@@ -28,12 +29,19 @@ const TourBookingInfo = ({ tour }) => {
             return;
         }
         navigate('/booking-request', { 
-            state: { tour, guestCount, adults, children, selectedDate, totalCost: tour.price * guestCount }
+            state: { 
+                tour, 
+                guestCount, 
+                adults, 
+                children, 
+                selectedDate, 
+                // ✅ THAY ĐỔI: Gửi đi tổng chi phí đã tính bằng VNĐ
+                totalCost: totalCostInVND
+            }
         });
     };
 
     return (
-        // --- BỎ THUỘC TÍNH STICKY Ở ĐÂY ---
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

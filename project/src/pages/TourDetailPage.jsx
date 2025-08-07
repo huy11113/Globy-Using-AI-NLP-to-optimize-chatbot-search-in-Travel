@@ -46,7 +46,6 @@ const TourDetailPage = () => {
             
             {/* CỘT TRÁI (8/12): NỘI DUNG CHÍNH */}
             <div className="lg:col-span-8 space-y-12">
-              {/* --- ĐÃ THAY ĐỔI THỨ TỰ Ở ĐÂY --- */}
               <section id="gallery"><TourGallery images={tour.images} title={tour.title} /></section>
               <section id="highlights"><TourHighlights tour={tour} /></section>
               <section id="itinerary"><ItinerarySection tour={tour} /></section>
@@ -55,14 +54,15 @@ const TourDetailPage = () => {
               <section id="reviews"><ReviewSection tourId={tour._id} /></section>
             </div>
 
-            {/* CỘT PHẢI (4/12): SIDEBAR */}
-            <div className="lg:col-span-4">
-                <div className="lg:sticky top-24 space-y-8">
-                    <TourBookingInfo tour={tour} />
-                    <TourNavigation />
-                    <ConsultationForm />
-                </div>
-            </div>
+           {/* CỘT PHẢI (4/12): SIDEBAR */}
+<div className="lg:col-span-4">
+  <div className="sticky top-24 space-y-8">
+    <TourBookingInfo tour={tour} />
+    <TourNavigation />
+    <ConsultationForm />
+  </div>
+</div>
+
           </div>
         </div>
       </div>

@@ -1,45 +1,63 @@
 import React from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, ChevronDown, Baby, AlertTriangle } from 'lucide-react';
 
 const TourNotes = () => {
-    // Dữ liệu này có thể được lấy từ API trong tương lai
-    const childFares = [
-        "Dưới 2 tuổi: 30% giá tour (ngủ ghép chung giường với người lớn)",
-        "Từ 2 - dưới 11 tuổi: 90% giá tour ( 1 Trẻ em ngủ ghép chung giường với 2 người lớn)",
-        "Từ 11 tuổi trở lên: tính bằng giá tour người lớn",
-        "Trường hợp 2 trẻ em đi chung với 2 người lớn, quý khách vui lòng đóng tiền 1 trẻ em giá người lớn để lấy thêm 1 giường"
-    ];
+    // Dữ liệu chi tiết và đầy đủ hơn
+    const childFares = {
+        title: "Chính sách giá vé cho trẻ em",
+        icon: <Baby size={20} className="text-blue-600" />,
+        color: "blue",
+        content: [
+            "Trẻ em dưới 2 tuổi: Phụ thu 30% giá tour. Gia đình tự lo ăn uống và vé tham quan (nếu có). Bé sẽ ngủ ghép chung giường với bố mẹ.",
+            "Trẻ em từ 2 đến dưới 11 tuổi: Tính 90% giá tour. Bé sẽ có suất ăn riêng, ghế ngồi riêng trên xe và ngủ ghép chung giường với bố mẹ.",
+            "Trường hợp 2 trẻ em đi cùng 2 người lớn: Quý khách vui lòng thanh toán thêm chi phí cho 1 suất người lớn để lấy thêm 1 giường.",
+            "Trẻ em từ 11 tuổi trở lên: Tính bằng giá vé người lớn."
+        ]
+    };
 
-    const notes = [
-        "Khi đăng ký tour du lịch, Quý khách vui lòng đọc kỹ chương trình, giá tour, các khoản bao gồm cũng như không bao gồm, các điều kiện hủy tour trong chương trình.",
-        "Quý khách vui lòng đem theo Passport (bản chính), đặt cọc trước 70% giá tour  khi đăng ký tour và hoàn tất thanh toán trước 2 tuần trước khi tour khởi hành",
-        "Trường hợp Quý khách thanh toán bằng thẻ cà ngân hàng hoặc thanh toán qua cổng vnpay/onepay sẽ phụ thu thêm phí dịch vụ là 3%.",
-        "Do tính chất là đoàn ghép khách lẻ, công ty sẽ có trách nhiệm thu nhận khách cho đủ đoàn (10 khách người lớn trở lên) thì đoàn sẽ khởi hành đúng lịch trình."
-    ];
+    const generalNotes = {
+        title: "Điều khoản và Lưu ý quan trọng",
+        icon: <AlertTriangle size={20} className="text-yellow-600" />,
+        color: "yellow",
+        content: [
+            "Quý khách vui lòng đọc kỹ chương trình, giá tour, các khoản bao gồm và không bao gồm, cũng như các điều kiện hủy tour trước khi đăng ký.",
+            "Hộ chiếu (Passport) của Quý khách phải còn hạn trên 6 tháng tính đến ngày về.",
+            "Quý khách vui lòng đặt cọc 70% giá trị tour ngay khi đăng ký và thanh toán đủ 100% trước ngày khởi hành 14 ngày.",
+            "Do tính chất là đoàn ghép khách lẻ, công ty sẽ có trách nhiệm thu nhận khách cho đủ đoàn (tối thiểu 10 khách người lớn) thì đoàn sẽ khởi hành đúng lịch trình. Nếu số lượng đoàn dưới 10 khách, công ty sẽ thông báo cho khách trước ngày khởi hành 5 ngày và thoả thuận lại ngày khởi hành mới, hoặc hoàn trả lại toàn bộ số tiền đã đặt cọc.",
+            "Thứ tự các điểm tham quan trong chương trình có thể thay đổi tùy thuộc vào điều kiện thời tiết và tình hình giao thông thực tế, tuy nhiên vẫn đảm bảo đầy đủ các điểm tham quan như đã trình bày.",
+            "Phụ thu phí dịch vụ 3% trên tổng giá trị giao dịch khi Quý khách thanh toán bằng thẻ tín dụng hoặc qua các cổng thanh toán điện tử."
+        ]
+    };
+    
+    const renderSection = (data) => (
+        <details className="group" open>
+            <summary className="font-semibold text-lg cursor-pointer flex justify-between items-center text-gray-800 list-none p-4 bg-gray-50 hover:bg-gray-100 rounded-t-lg border">
+                <div className="flex items-center gap-3">
+                    {data.icon}
+                    <span>{data.title}</span>
+                </div>
+                <ChevronDown className="transform transition-transform duration-300 group-open:rotate-180" />
+            </summary>
+            <div className={`p-5 border border-t-0 rounded-b-lg bg-white border-${data.color}-200`}>
+                 <ul className="space-y-3 list-disc pl-5 text-gray-700">
+                    {data.content.map((item, index) => (
+                        <li key={index}>{item}</li>
+                    ))}
+                </ul>
+            </div>
+        </details>
+    );
 
     return (
         <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
             <div className="flex items-center gap-3 pb-4 mb-6 border-b">
-                <FileText className="text-pink-500" />
-                <h3 className="text-2xl font-bold text-gray-800">Ghi chú (Xem Thêm)</h3>
+                <FileText className="text-gray-500" />
+                <h3 className="text-2xl font-bold text-gray-800">Các thông tin quan trọng khác</h3>
             </div>
+            
             <div className="space-y-6">
-                <div>
-                    <h4 className="font-bold text-lg text-gray-800 mb-3">GIÁ VÉ TRẺ EM</h4>
-                    <ul className="space-y-2 list-disc pl-5">
-                        {childFares.map((item, index) => (
-                            <li key={index} className="text-gray-700">{item}</li>
-                        ))}
-                    </ul>
-                </div>
-                <div>
-                    <h4 className="font-bold text-lg text-gray-800 mb-3">LƯU Ý</h4>
-                    <ul className="space-y-2 list-disc pl-5">
-                        {notes.map((item, index) => (
-                            <li key={index} className="text-gray-700">{item}</li>
-                        ))}
-                    </ul>
-                </div>
+                {renderSection(childFares)}
+                {renderSection(generalNotes)}
             </div>
         </div>
     );

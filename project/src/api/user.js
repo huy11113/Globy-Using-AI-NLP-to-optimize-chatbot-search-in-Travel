@@ -64,13 +64,37 @@ export const changeUserPassword = (userId, passwordData) => {
     });
 };
 
+
+
 /**
- * Xóa tài khoản người dùng.
- * @param {string} userId - ID của người dùng.
+ * ✅ HÀM MỚI: Xóa một người dùng (cho admin).
+ * @param {string} userId - ID của người dùng cần xóa.
+ * @param {string} token - Token xác thực của admin.
  * @returns {Promise<object>}
  */
-export const deleteUserAccount = (userId) => {
+export const deleteUser = (userId, token) => {
     return fetchApi(`/users/${userId}`, {
         method: 'DELETE',
+        headers: {
+            // 'Authorization': `Bearer ${token}`
+        },
+    });
+};
+
+/**
+ * ✅ HÀM MỚI: Cập nhật vai trò của một người dùng (cho admin).
+ * @param {string} userId - ID của người dùng.
+ * @param {string} newRole - Vai trò mới ('admin' hoặc 'user').
+ * @param {string} token - Token xác thực của admin.
+ * @returns {Promise<object>}
+ */
+export const updateUserRole = (userId, newRole, token) => {
+    return fetchApi(`/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole }),
     });
 };

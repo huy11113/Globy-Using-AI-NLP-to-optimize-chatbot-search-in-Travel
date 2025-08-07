@@ -121,10 +121,14 @@ const Header = () => {
                             {/* Chuông thông báo (chỉ hiện khi đã đăng nhập) */}
                             {user && (
                                 <div className="relative" ref={notifRef}>
-                                    <button onClick={() => setIsNotifOpen(prev => !prev)} className={`relative transition-colors duration-300 hover:text-sky-500 ${isScrolled ? textClassScrolled : textClassNotScrolled}`}>
+                                    <button onClick={() => setIsNotifOpen(prev => !prev)} className={`relative transition-colors duration-300 hover:text-sky-500 p-2 ${isScrolled ? textClassScrolled : textClassNotScrolled}`}>
                                         <Bell size={24} />
                                         {notifications.length > 0 && (
-                                            <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">{notifications.length}</span>
+                                            // -- ✅ ĐIỀU CHỈNH Ở ĐÂY --
+                                            // Sử dụng grid để định vị chính xác và dễ dàng hơn
+                                            <span className="absolute top-0 right-0 grid h-5 w-5 place-content-center rounded-full bg-red-500 text-white text-xs font-bold border-2 border-white">
+                                                {notifications.length}
+                                            </span>
                                         )}
                                     </button>
                                     {/* Dropdown thông báo */}

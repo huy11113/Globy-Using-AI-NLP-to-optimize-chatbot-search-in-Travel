@@ -45,7 +45,6 @@ const TourNavigation = () => {
     };
 
     return (
-        // Component này KHÔNG CÓ `sticky`
         <div className="hidden lg:block"> 
             <div className="bg-white p-4 rounded-xl shadow-xl border border-gray-200">
                 <ul className="space-y-2">
