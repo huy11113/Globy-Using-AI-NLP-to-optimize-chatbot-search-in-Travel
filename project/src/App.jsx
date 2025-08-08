@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
-
+import ChatbotWidget from './components/common/ChatbotWidget'; 
 // --- Import Layouts ---
 import Header from './components/home/Header';
 import Footer from './components/common/Footer';
@@ -139,6 +139,7 @@ const App = () => {
                 {/* --- Route dự phòng --- */}
                 <Route path="*" element={<PageNotFound />} />
             </Routes>
+            <ChatbotWidget />
         </Router>
     );
 };
