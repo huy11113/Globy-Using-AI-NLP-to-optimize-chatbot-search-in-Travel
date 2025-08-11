@@ -1,5 +1,5 @@
 // ✅ Cải tiến 1: Định nghĩa một URL gốc để dễ dàng thay đổi và tái sử dụng.
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 /**
  * Gửi yêu cầu tạo một booking mới lên server.
