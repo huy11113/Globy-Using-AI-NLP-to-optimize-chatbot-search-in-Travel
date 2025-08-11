@@ -1,3 +1,6 @@
+// src/api/review.js
+
+// Định nghĩa URL gốc, không có /api
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 /**
@@ -7,7 +10,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
  */
 export const getReviewsByTour = async (tourId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/reviews/tour/${tourId}`);
+        // Sửa lỗi: Thêm /api vào URL
+        const response = await fetch(`${API_BASE_URL}/api/reviews/tour/${tourId}`);
         if (!response.ok) throw new Error('Failed to fetch reviews');
         return await response.json();
     } catch (error) {
@@ -22,7 +26,8 @@ export const getReviewsByTour = async (tourId) => {
  */
 export const submitReview = async (reviewData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/reviews`, {
+        // Sửa lỗi: Thêm /api vào URL
+        const response = await fetch(`${API_BASE_URL}/api/reviews`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(reviewData)
