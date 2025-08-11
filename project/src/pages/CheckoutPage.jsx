@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// src/pages/CheckoutPage.jsx
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBookingDetails } from '../api/booking';
 import { createPaymentLink } from '../api/payment'; // Import hàm mới
@@ -15,10 +17,11 @@ const CheckoutPage = () => {
     const [isCreatingLink, setIsCreatingLink] = useState(true);
     const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
-    // --- LOGIC LẤY DỮ LIỆU VÀ TẠO LINK ---
+    // Gộp logic lấy dữ liệu và tạo link vào một useEffect duy nhất
     useEffect(() => {
         const initializePayment = async () => {
             setLoading(true);
+            setError('');
 
             // 1. Lấy chi tiết đơn hàng
             const bookingResult = await getBookingDetails(bookingId);
@@ -29,6 +32,7 @@ const CheckoutPage = () => {
                 return;
             }
 
+            // Kiểm tra trạng thái đơn hàng
             if (bookingResult.data.status !== 'approved') {
                 alert("Đơn hàng này không cần thanh toán hoặc đã được xử lý.");
                 navigate('/my-trips');
@@ -53,9 +57,9 @@ const CheckoutPage = () => {
         initializePayment();
     }, [bookingId, navigate]);
 
-    // --- LOGIC TỰ ĐỘNG KIỂM TRA TRẠNG THÁI ---
+    // Logic tự động kiểm tra trạng thái thanh toán (giữ nguyên)
     useEffect(() => {
-        if (!checkoutUrl) return; // Chỉ chạy khi đã có link
+        if (!checkoutUrl) return;
 
         setIsCheckingStatus(true);
         const intervalId = setInterval(async () => {
@@ -66,9 +70,9 @@ const CheckoutPage = () => {
                 alert("Thanh toán thành công! Chuyến đi của bạn đã được xác nhận.");
                 navigate('/my-trips');
             }
-        }, 5000); // Kiểm tra mỗi 5 giây
+        }, 5000);
 
-        return () => clearInterval(intervalId); // Dọn dẹp khi component unmount
+        return () => clearInterval(intervalId);
     }, [checkoutUrl, bookingId, navigate]);
 
     // --- CÁC TRẠNG THÁI HIỂN THỊ ---
@@ -76,12 +80,13 @@ const CheckoutPage = () => {
         return (
             <div className="flex flex-col justify-center items-center h-screen">
                 <Loader2 className="animate-spin text-sky-500" size={48} />
-                <h2 className="mt-4 text-lg font-semibold text-gray-700">Đang tải thông tin thanh toán...</h2>
+                <h2 className="mt-4 text-lg font-semibold text-gray-700">Đang chuẩn bị thanh toán...</h2>
             </div>
         );
     }
     
-    if (error) {
+    // Hiển thị lỗi tổng quát
+    if (error && !booking) {
         return (
             <div className="text-center py-24">
                 <h2 className="text-2xl font-bold text-red-600 mb-4">Đã xảy ra lỗi</h2>
@@ -126,7 +131,7 @@ const CheckoutPage = () => {
                                                     <p className="text-gray-600 mt-2">Đang tạo mã thanh toán...</p>
                                                 </>
                                             ) : (
-                                                <p className="text-red-600 px-4">{error || "Không thể tạo mã QR, vui lòng thử tải lại trang."}</p>
+                                                <p className="text-red-600 px-4">{error || "Không thể tạo mã QR. Vui lòng thử tải lại trang."}</p>
                                             )}
                                         </div>
                                     </div>

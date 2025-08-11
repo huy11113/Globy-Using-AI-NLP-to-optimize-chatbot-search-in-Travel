@@ -1,3 +1,5 @@
+// src/api/payment.js
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 /**
@@ -9,9 +11,9 @@ export const createPaymentLink = async (bookingId) => {
     if (!bookingId) {
         return { success: false, message: 'Booking ID is required.' };
     }
-    
+
     try {
-        const response = await fetch(`${API_BASE_URL}/payment/create-payment-link`, {
+        const response = await fetch(`${API_BASE_URL}/api/payment/create-payment-link`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ bookingId }),
@@ -22,7 +24,7 @@ export const createPaymentLink = async (bookingId) => {
         if (!response.ok) {
             throw new Error(result.message || "Không thể tạo link thanh toán.");
         }
-        
+
         return result;
     } catch (err) {
         console.error("Error creating payment link:", err);
