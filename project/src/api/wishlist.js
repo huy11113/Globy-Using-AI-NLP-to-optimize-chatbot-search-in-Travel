@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:4000/api/wishlist';
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/wishlist`;
 
 /**
  * Lấy danh sách tour yêu thích của người dùng

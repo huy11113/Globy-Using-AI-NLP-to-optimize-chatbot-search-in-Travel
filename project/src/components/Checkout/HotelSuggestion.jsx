@@ -32,7 +32,8 @@ const HotelSuggestion = ({ destinationId, onHotelSelect }) => {
         const fetchHotels = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:4000/api/hotels?destinationId=${destinationId}`);
+                const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+                 const response = await fetch(`${API_BASE_URL}/hotels?destinationId=${destinationId}`);
                 const result = await response.json();
                 if (result.success) {
                     // Chỉ lấy tối đa 3 khách sạn để gợi ý
