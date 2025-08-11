@@ -1,13 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-
 /**
  * Lấy danh sách thông báo chưa đọc của admin.
  * @returns {Promise<object>}
  */
 export const getUnreadAdminNotifications = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/notifications`);
+        const response = await fetch(`${API_BASE_URL}/api/admin/notifications`);
         if (!response.ok) {
             throw new Error('Failed to fetch notifications');
         }
@@ -25,7 +24,7 @@ export const getUnreadAdminNotifications = async () => {
  */
 export const markNotificationAsRead = async (notificationId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/notifications/${notificationId}/read`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/notifications/${notificationId}/read`, {
             method: 'POST',
         });
         if (!response.ok) {
@@ -37,7 +36,6 @@ export const markNotificationAsRead = async (notificationId) => {
         return { success: false, message: error.message };
     }
 };
-// Thêm 2 hàm này vào cuối file api/notification.js
 
 /**
  * Lấy danh sách thông báo chưa đọc của user.
@@ -46,8 +44,7 @@ export const markNotificationAsRead = async (notificationId) => {
  */
 export const getUnreadUserNotifications = async (userId) => {
     try {
-        // Đường dẫn API đúng phải là /api/admin/notifications/user/{userId}
-        const response = await fetch(`${API_BASE_URL}/admin/notifications/user/${userId}`);
+        const response = await fetch(`${API_BASE_URL}/api/admin/notifications/user/${userId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch user notifications');
         }
@@ -65,7 +62,7 @@ export const getUnreadUserNotifications = async (userId) => {
  */
 export const markUserNotificationAsRead = async (notificationId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/notifications/user/${notificationId}/read`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/notifications/user/${notificationId}/read`, {
             method: 'POST',
         });
         if (!response.ok) {

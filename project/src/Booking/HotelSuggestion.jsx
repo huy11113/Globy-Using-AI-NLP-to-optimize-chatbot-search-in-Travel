@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BedDouble } from 'lucide-react';
-
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 // Component con để hiển thị một thẻ khách sạn
 const HotelCard = ({ hotel, onSelect, isSelected }) => (
     <div 
@@ -34,7 +34,7 @@ const HotelSuggestion = ({ city, onHotelSelect }) => {
             setLoading(true);
             try {
                 // Gọi API bằng city để lấy danh sách khách sạn
-                const response = await fetch(`http://localhost:4000/api/hotels?city=${city}`);
+                const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
                 const result = await response.json();
                 if (result.success) {
                     // Chỉ lấy tối đa 3 khách sạn để gợi ý
