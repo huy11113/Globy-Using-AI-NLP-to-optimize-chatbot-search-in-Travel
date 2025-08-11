@@ -1,14 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-/**
- * Hàm fetch API chung để xử lý yêu cầu và lỗi một cách nhất quán.
- * @param {string} endpoint - Điểm cuối của API (ví dụ: '/users').
- * @param {object} options - Các tùy chọn cho hàm fetch (method, headers, body).
- * @returns {Promise<object>} - Kết quả từ server.
- */
 const fetchApi = async (endpoint, options = {}) => {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+        // SỬA LỖI: Thêm /api vào đường dẫn URL
+        const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
         const result = await response.json();
 
         if (!response.ok) {
@@ -31,7 +26,7 @@ export const getAllUsers = (token) => {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${token}` // Sẽ cần khi bạn bảo mật API admin
+            // 'Authorization': `Bearer ${token}` 
         },
     });
 };
@@ -64,10 +59,8 @@ export const changeUserPassword = (userId, passwordData) => {
     });
 };
 
-
-
 /**
- * ✅ HÀM MỚI: Xóa một người dùng (cho admin).
+ * Xóa một người dùng (cho admin).
  * @param {string} userId - ID của người dùng cần xóa.
  * @param {string} token - Token xác thực của admin.
  * @returns {Promise<object>}
@@ -82,7 +75,7 @@ export const deleteUser = (userId, token) => {
 };
 
 /**
- * ✅ HÀM MỚI: Cập nhật vai trò của một người dùng (cho admin).
+ * Cập nhật vai trò của một người dùng (cho admin).
  * @param {string} userId - ID của người dùng.
  * @param {string} newRole - Vai trò mới ('admin' hoặc 'user').
  * @param {string} token - Token xác thực của admin.
