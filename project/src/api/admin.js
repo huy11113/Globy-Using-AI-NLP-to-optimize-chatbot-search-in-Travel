@@ -1,98 +1,79 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// src/api/admin.js
 
-// Hàm lấy tất cả các booking
-export const getAllBookings = async (token) => {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+const fetchApi = async (endpoint, options = {}) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/bookings`, {
-            headers: {
-                // 'Authorization': `Bearer ${token}` // Sẽ cần khi bạn bảo mật API
-            }
-        });
-        if (!response.ok) throw new Error('Failed to fetch bookings');
-        return await response.json();
+        // Sửa lỗi: Thêm /api vào trước endpoint
+        const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Đã có lỗi xảy ra.');
+        }
+        return result;
     } catch (error) {
+        console.error(`Lỗi khi gọi API ${endpoint}:`, error);
         return { success: false, message: error.message };
     }
+};
+
+// Hàm lấy tất cả các booking
+export const getAllBookings = (token) => {
+    return fetchApi('/admin/bookings', {
+        headers: {
+            // 'Authorization': `Bearer ${token}`
+        }
+    });
 };
 
 // Hàm duyệt một booking
-export const approveBooking = async (bookingId, token) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/approve`, {
-            method: 'POST',
-            headers: {
-                // 'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to approve booking');
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
+export const approveBooking = (bookingId, token) => {
+    return fetchApi(`/admin/bookings/${bookingId}/approve`, {
+        method: 'POST',
+        headers: {
+            // 'Authorization': `Bearer ${token}`
+        }
+    });
 };
 
 // Hàm từ chối một booking
-export const rejectBooking = async (bookingId, token) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/reject`, {
-            method: 'POST',
-            headers: {
-                // 'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to reject booking');
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
+export const rejectBooking = (bookingId, token) => {
+    return fetchApi(`/admin/bookings/${bookingId}/reject`, {
+        method: 'POST',
+        headers: {
+            // 'Authorization': `Bearer ${token}`
+        }
+    });
 };
+
 // --- TOUR MANAGEMENT ---
-
-export const createTour = async (tourData, token) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/tours`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${token}` // Sẽ cần khi bảo mật
-            },
-            body: JSON.stringify(tourData)
-        });
-        if (!response.ok) throw new Error('Failed to create tour');
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
+export const createTour = (tourData, token) => {
+    return fetchApi('/tours', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(tourData)
+    });
 };
 
-export const updateTour = async (tourId, tourData, token) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/tours/${tourId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(tourData)
-        });
-        if (!response.ok) throw new Error('Failed to update tour');
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
+export const updateTour = (tourId, tourData, token) => {
+    return fetchApi(`/tours/${tourId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(tourData)
+    });
 };
 
-export const deleteTour = async (tourId, token) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/tours/${tourId}`, {
-            method: 'DELETE',
-            headers: {
-                // 'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to delete tour');
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
+export const deleteTour = (tourId, token) => {
+    return fetchApi(`/tours/${tourId}`, {
+        method: 'DELETE',
+        headers: {
+            // 'Authorization': `Bearer ${token}`
+        }
+    });
 };
