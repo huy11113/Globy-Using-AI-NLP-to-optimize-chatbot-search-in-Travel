@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// Đã thêm dòng này để sử dụng biến môi trường một cách nhất quán
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const useDestinationDetail = (id) => {
   const [destination, setDestination] = useState(null);
@@ -19,8 +20,10 @@ const useDestinationDetail = (id) => {
       setError('');
       try {
         const [destinationResponse, toursResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/destinations/${id}`),
-          fetch(`${API_BASE_URL}/tours?destination=${id}`)
+          // Sửa lỗi: Thêm /api vào đúng URL
+          fetch(`${API_BASE_URL}/api/destinations/${id}`),
+          // Sửa lỗi: Thêm /api vào đúng URL
+          fetch(`${API_BASE_URL}/api/tours?destinationId=${id}`) // Sửa lại thành destinationId để khớp với backend
         ]);
 
         const destinationData = await destinationResponse.json();

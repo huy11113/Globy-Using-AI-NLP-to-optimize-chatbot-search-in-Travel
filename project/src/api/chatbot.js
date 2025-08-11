@@ -1,8 +1,10 @@
+// Định nghĩa URL gốc, không có /api
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const askChatbot = async (prompt) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/chatbot/ask`, {
+        // SỬA LỖI: Thêm /api vào URL
+        const response = await fetch(`${API_BASE_URL}/api/chatbot/ask`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(prompt),
