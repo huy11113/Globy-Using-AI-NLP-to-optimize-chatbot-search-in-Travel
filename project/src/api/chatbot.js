@@ -1,13 +1,18 @@
+// File: src/api/chatbot.js
+
 // Định nghĩa URL gốc, không có /api
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-export const askChatbot = async (prompt) => {
+// ✅ SỬA LẠI HÀM NÀY ĐỂ NHẬN VÀ GỬI ĐI LỊCH SỬ CHAT
+export const askChatbot = async (messageHistory) => {
     try {
-        // SỬA LỖI: Thêm /api vào URL
+        // Thêm /api vào URL
         const response = await fetch(`${API_BASE_URL}/api/chatbot/ask`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(prompt),
+            // Quan trọng: Gửi đi một đối tượng có key là "history"
+            // đúng như backend (ChatRequest.java) đang mong đợi
+            body: JSON.stringify({ history: messageHistory }),
         });
 
         const result = await response.json();

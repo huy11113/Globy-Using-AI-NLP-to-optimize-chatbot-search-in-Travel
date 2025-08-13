@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+// ✅ KIỂM TRA ĐƯỜNG DẪN IMPORT NÀY
+import Sidebar from '../components/Sidebar'; 
 import AdminHeader from '../components/AdminHeader';
 
 const AdminLayout = () => {
@@ -10,7 +11,6 @@ const AdminLayout = () => {
             <div className="flex-1 flex flex-col">
                 <AdminHeader />
                 <main className="flex-1 p-8 overflow-y-auto">
-                    {/* Các trang con của admin sẽ được render ở đây */}
                     <Outlet /> 
                 </main>
             </div>

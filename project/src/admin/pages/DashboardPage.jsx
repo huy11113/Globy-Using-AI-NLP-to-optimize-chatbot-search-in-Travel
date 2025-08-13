@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import StatCard from '../components/StatCard';
-import { DollarSign, Users, ShoppingBag, UserPlus, FileText, ArrowRight, TrendingUp } from 'lucide-react';
-import { getAllBookings } from '@/api/admin';
-import { getAllUsers } from '@/api/user';
+import { DollarSign, Users, ShoppingBag, UserPlus, TrendingUp, PackageOpen } from 'lucide-react';
+import { getDashboardStats } from '@/api/admin'; // ✅ SỬ DỤNG HÀM MỚI
 
-// --- COMPONENT CON ---
-
+// --- CÁC COMPONENT CON (SKELETON, CHARTS) GIỮ NGUYÊN KHÔNG ĐỔI ---
 const StatCardSkeleton = () => (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-6 animate-pulse">
         <div className="p-4 bg-gray-200 rounded-lg w-16 h-16"></div>
@@ -26,7 +23,6 @@ const ChartSkeleton = ({ title }) => (
     </div>
 );
 
-// --- BIỂU ĐỒ DOANH THU ---
 const RevenueChart = ({ data }) => (
     <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
@@ -45,22 +41,14 @@ const RevenueChart = ({ data }) => (
     </div>
 );
 
-// --- BIỂU ĐỒ TRẠNG THÁI BOOKING ---
 const BookingStatusChart = ({ data }) => {
-    const COLORS = {
-        confirmed: '#10b981', // green-500
-        approved: '#3b82f6', // blue-500
-        pending_approval: '#f59e0b', // amber-500
-        rejected: '#ef4444', // red-500
-    };
+    const COLORS = { confirmed: '#10b981', approved: '#3b82f6', pending_approval: '#f59e0b', rejected: '#ef4444' };
     return (
         <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}>
-                        {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[entry.status]} />
-                        ))}
+                        {data.map((entry, index) => ( <Cell key={`cell-${index}`} fill={COLORS[entry.status]} /> ))}
                     </Pie>
                     <Tooltip formatter={(value, name) => [value, name]} />
                     <Legend iconType="circle" />
@@ -70,82 +58,56 @@ const BookingStatusChart = ({ data }) => {
     );
 };
 
-
-// --- COMPONENT CHÍNH ---
+// --- COMPONENT CHÍNH ĐÃ ĐƯỢC CẬP NHẬT ---
 const DashboardPage = () => {
     const [stats, setStats] = useState(null);
     const [chartData, setChartData] = useState({ revenue: [], bookingStatus: [] });
-    const [recentBookings, setRecentBookings] = useState([]);
-    const [recentUsers, setRecentUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
-            // ... (Logic fetchData giữ nguyên như trước, chỉ thêm phần xử lý cho biểu đồ)
+            setLoading(true);
             try {
-                setLoading(true);
-                const [bookingsResult, usersResult] = await Promise.all([ getAllBookings(), getAllUsers() ]);
-                if (!bookingsResult.success || !usersResult.success) throw new Error('Không thể tải dữ liệu dashboard.');
+                const result = await getDashboardStats(); // ✅ CHỈ MỘT LẦN GỌI API
+                if (!result.success) throw new Error(result.message || 'Không thể tải dữ liệu dashboard.');
 
-                const bookings = bookingsResult.data;
-                const users = usersResult.data;
+                const data = result.data;
 
-                // --- Xử lý dữ liệu cho biểu đồ ---
-                // 1. Biểu đồ doanh thu 6 tháng gần nhất
-                const revenueByMonth = Array(6).fill(0).map((_, i) => {
-                    const d = new Date();
-                    d.setMonth(d.getMonth() - i);
-                    return { name: `T${d.getMonth() + 1}/${d.getFullYear().toString().slice(-2)}`, revenue: 0 };
-                }).reverse();
-                
-                bookings.forEach(b => {
-                    if (b.status === 'confirmed' && b.createdAt) {
-                        const bookingDate = new Date(b.createdAt);
-                        const monthKey = `T${bookingDate.getMonth() + 1}/${bookingDate.getFullYear().toString().slice(-2)}`;
-                        const monthData = revenueByMonth.find(m => m.name === monthKey);
-                        if (monthData) {
-                            monthData.revenue += (b.totalPrice || 0) * 25450; // Giả định tỷ giá
-                        }
-                    }
+                // --- GÁN DỮ LIỆU THỐNG KÊ ---
+                setStats({
+                    totalRevenue: data.totalRevenue || 0,
+                    newBookings: { value: data.newBookingsThisMonth || 0 },
+                    newUsers: { value: data.newUsersThisMonth || 0 },
+                    totalUsers: data.totalUsers || 0,
+                    totalTours: data.totalTours || 0, // ✅ Thêm thống kê mới
                 });
+
+                // --- XỬ LÝ DỮ LIỆU CHO BIỂU ĐỒ ---
+                // 1. Biểu đồ doanh thu
+                const revenueChart = Object.entries(data.revenueByMonth || {})
+                    .map(([key, value]) => ({ name: key, revenue: value }))
+                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
                 // 2. Biểu đồ trạng thái booking
-                const statusCounts = bookings.reduce((acc, b) => {
-                    acc[b.status] = (acc[b.status] || 0) + 1;
-                    return acc;
-                }, {});
+                const statusNameMapping = {
+                    confirmed: 'Hoàn tất', approved: 'Đã duyệt',
+                    pending_approval: 'Chờ duyệt', rejected: 'Đã từ chối'
+                };
+                const statusChart = Object.entries(data.bookingStatusCounts || {})
+                    .map(([key, value]) => ({
+                        name: statusNameMapping[key] || key,
+                        value: value,
+                        status: key,
+                    }));
 
-                const statusData = Object.keys(statusCounts).map(key => ({
-                    name: {
-                        confirmed: 'Hoàn tất',
-                        approved: 'Đã duyệt',
-                        pending_approval: 'Chờ duyệt',
-                        rejected: 'Đã từ chối'
-                    }[key] || key,
-                    value: statusCounts[key],
-                    status: key,
-                }));
-                
-                setChartData({ revenue: revenueByMonth, bookingStatus: statusData });
-                
-                // --- Xử lý các thống kê khác (giữ nguyên) ---
-                const now = new Date();
-                const oneMonthAgo = new Date(new Date().setMonth(now.getMonth() - 1));
-                const currentMonthBookings = bookings.filter(b => new Date(b.createdAt) >= oneMonthAgo);
-                const totalRevenue = bookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + (b.totalPrice || 0), 0);
-                
-                setStats({
-                    totalRevenue,
-                    newBookings: { value: currentMonthBookings.length },
-                    newUsers: { value: users.filter(u => new Date(u.createdAt) >= oneMonthAgo).length },
-                    totalUsers: users.length
-                });
+                setChartData({ revenue: revenueChart, bookingStatus: statusChart });
 
-                setRecentBookings(bookings.slice(0, 5));
-                setRecentUsers(users.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5));
-
-            } catch (err) { setError(err.message); } finally { setLoading(false); }
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchData();
@@ -160,10 +122,10 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 {loading ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />) : (
                     <>
-                        <StatCard icon={<DollarSign size={28} />} title="Tổng doanh thu (VNĐ)" value={new Intl.NumberFormat('vi-VN').format(stats.totalRevenue * 25450)} />
+                        <StatCard icon={<DollarSign size={28} />} title="Tổng doanh thu (VNĐ)" value={new Intl.NumberFormat('vi-VN').format(stats.totalRevenue)} />
                         <StatCard icon={<ShoppingBag size={28} />} title="Booking mới (tháng này)" value={stats.newBookings.value} />
                         <StatCard icon={<UserPlus size={28} />} title="Khách hàng mới (tháng này)" value={stats.newUsers.value} />
-                        <StatCard icon={<Users size={28} />} title="Tổng số người dùng" value={stats.totalUsers} />
+                        <StatCard icon={<PackageOpen size={28} />} title="Tổng số tours" value={stats.totalTours} /> 
                     </>
                 )}
             </div>
@@ -178,9 +140,6 @@ const DashboardPage = () => {
                      {loading ? <ChartSkeleton /> : <BookingStatusChart data={chartData.bookingStatus} />}
                 </div>
             </div>
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 {/* Hoạt động gần đây */}
-             </div>
         </div>
     );
 };

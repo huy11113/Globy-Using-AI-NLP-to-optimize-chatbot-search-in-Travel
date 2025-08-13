@@ -33,6 +33,11 @@ import AdminBookingsPage from '@/admin/pages/AdminBookingsPage'; // Sửa đư�
 import AdminToursPage from './admin/pages/AdminToursPage';
 import AdminTourFormPage from './admin/pages/AdminTourFormPage';
 import AdminUsersPage from './admin/pages/AdminUsersPage';
+import AdminReviewsPage from './admin/pages/AdminReviewsPage';
+import AdminDestinationsPage from './admin/pages/AdminDestinationsPage';
+import AdminDestinationFormPage from './admin/pages/AdminDestinationFormPage';
+import AdminBlogPage from './admin/pages/AdminBlogPage';
+import AdminBlogFormPage from './admin/pages/AdminBlogFormPage';
 // --- Route Guards ---
 const PrivateRoute = ({ children }) => {
     const { user } = useContext(AuthContext);
@@ -106,7 +111,14 @@ const App = () => {
                     <Route path="tours" element={<AdminToursPage />} />
                     <Route path="tours/new" element={<AdminTourFormPage />} />
                     <Route path="tours/edit/:id" element={<AdminTourFormPage />} />
-                     <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="reviews" element={<AdminReviewsPage />} />
+                    <Route path="destinations" element={<AdminDestinationsPage />} />
+                    <Route path="destinations/new" element={<AdminDestinationFormPage />} />
+                    <Route path="destinations/edit/:id" element={<AdminDestinationFormPage />} />
+                    <Route path="blog" element={<AdminBlogPage />} />
+                    <Route path="blog/new" element={<AdminBlogFormPage />} />
+                    <Route path="blog/edit/:id" element={<AdminBlogFormPage />} />
 
 
                 </Route>

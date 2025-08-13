@@ -1,8 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+/**
+ * ✅ HÀM TIỆN ÍCH BỊ THIẾU
+ * Hàm fetch API chung để xử lý yêu cầu và lỗi một cách nhất quán.
+ */
 const fetchApi = async (endpoint, options = {}) => {
     try {
-        // SỬA LỖI: Thêm /api vào đường dẫn URL
         const response = await fetch(`${API_BASE_URL}/api${endpoint}`, options);
         const result = await response.json();
 
@@ -16,70 +19,29 @@ const fetchApi = async (endpoint, options = {}) => {
     }
 };
 
+// --- CÁC HÀM API CHO USER ---
+
 /**
  * Lấy danh sách tất cả người dùng (cho admin).
- * @param {string} token - Token xác thực của admin.
- * @returns {Promise<object>}
  */
 export const getAllUsers = (token) => {
     return fetchApi(`/users`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${token}` 
-        },
-    });
-};
-
-/**
- * Cập nhật thông tin cá nhân của người dùng.
- * @param {string} userId - ID của người dùng.
- * @param {object} userData - Dữ liệu cần cập nhật (name, phoneNumber).
- * @returns {Promise<object>}
- */
-export const updateUserProfile = (userId, userData) => {
-    return fetchApi(`/users/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-    });
-};
-
-/**
- * Thay đổi mật khẩu của người dùng.
- * @param {string} userId - ID của người dùng.
- * @param {object} passwordData - { currentPassword, newPassword }.
- * @returns {Promise<object>}
- */
-export const changeUserPassword = (userId, passwordData) => {
-    return fetchApi(`/users/${userId}/change-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(passwordData),
+        headers: { /* 'Authorization': `Bearer ${token}` */ },
     });
 };
 
 /**
  * Xóa một người dùng (cho admin).
- * @param {string} userId - ID của người dùng cần xóa.
- * @param {string} token - Token xác thực của admin.
- * @returns {Promise<object>}
  */
 export const deleteUser = (userId, token) => {
     return fetchApi(`/users/${userId}`, {
         method: 'DELETE',
-        headers: {
-            // 'Authorization': `Bearer ${token}`
-        },
+        headers: { /* 'Authorization': `Bearer ${token}` */ },
     });
 };
 
 /**
  * Cập nhật vai trò của một người dùng (cho admin).
- * @param {string} userId - ID của người dùng.
- * @param {string} newRole - Vai trò mới ('admin' hoặc 'user').
- * @param {string} token - Token xác thực của admin.
- * @returns {Promise<object>}
  */
 export const updateUserRole = (userId, newRole, token) => {
     return fetchApi(`/users/${userId}/role`, {
@@ -89,5 +51,19 @@ export const updateUserRole = (userId, newRole, token) => {
             // 'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ role: newRole }),
+    });
+};
+
+/**
+ * Cập nhật trạng thái khóa của người dùng (cho admin).
+ */
+export const updateUserSuspension = (userId, isSuspended, token) => {
+    return fetchApi(`/users/${userId}/suspend`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ suspended: isSuspended }),
     });
 };

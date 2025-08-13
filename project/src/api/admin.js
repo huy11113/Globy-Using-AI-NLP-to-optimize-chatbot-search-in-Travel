@@ -77,3 +77,100 @@ export const deleteTour = (tourId, token) => {
         }
     });
 };
+// ✅ HÀM MỚI: Lấy tất cả dữ liệu thống kê cho dashboard
+export const getDashboardStats = (token) => {
+    return fetchApi('/admin/dashboard/stats', {
+        headers: {
+            // 'Authorization': `Bearer ${token}` // Bật lại khi cần xác thực
+        }
+    });
+};
+// --- REVIEW MANAGEMENT (ADMIN) ---
+
+/**
+ * Lấy tất cả review cho admin.
+ */
+export const getAllReviewsForAdmin = (token) => {
+    return fetchApi('/reviews/admin/all', {
+        headers: { /* 'Authorization': `Bearer ${token}` */ }
+    });
+};
+
+/**
+ * Cập nhật trạng thái hiển thị của một review.
+ * @param {string} reviewId ID của review
+ * @param {boolean} isVisible Trạng thái mới
+ */
+export const updateReviewVisibility = (reviewId, isVisible, token) => {
+    return fetchApi(`/reviews/admin/${reviewId}/visibility`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isVisible })
+    });
+};
+
+/**
+ * Xóa một review.
+ * @param {string} reviewId ID của review
+ */
+export const deleteReview = (reviewId, token) => {
+    return fetchApi(`/reviews/admin/${reviewId}`, {
+        method: 'DELETE',
+        headers: {
+            // 'Authorization': `Bearer ${token}`
+        }
+    });
+};
+// --- DESTINATION MANAGEMENT ---
+export const createDestination = (destinationData, token) => {
+    return fetchApi('/destinations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' /*, 'Authorization': `Bearer ${token}`*/ },
+        body: JSON.stringify(destinationData)
+    });
+};
+
+export const updateDestination = (id, destinationData, token) => {
+    return fetchApi(`/destinations/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' /*, 'Authorization': `Bearer ${token}`*/ },
+        body: JSON.stringify(destinationData)
+    });
+};
+
+export const deleteDestination = (id, token) => {
+    return fetchApi(`/destinations/${id}`, {
+        method: 'DELETE',
+        headers: { /* 'Authorization': `Bearer ${token}` */ }
+    });
+};
+// --- BLOG POST MANAGEMENT ---
+export const getAllPosts = (token) => {
+    return fetchApi('/blog', { /* ... headers */ });
+};
+
+export const createPost = (postData, token) => {
+    return fetchApi('/blog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' /*, Authorization */ },
+        body: JSON.stringify(postData)
+    });
+};
+
+export const updatePost = (id, postData, token) => {
+    return fetchApi(`/blog/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' /*, Authorization */ },
+        body: JSON.stringify(postData)
+    });
+};
+
+export const deletePost = (id, token) => {
+    return fetchApi(`/blog/${id}`, {
+        method: 'DELETE',
+        headers: { /* Authorization */ }
+    });
+};

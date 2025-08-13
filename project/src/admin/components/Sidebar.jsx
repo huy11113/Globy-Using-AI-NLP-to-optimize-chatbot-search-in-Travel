@@ -1,13 +1,20 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, Map, Plane, Settings, LogOut } from 'lucide-react';
+import { 
+    LayoutDashboard, 
+    Users, 
+    Map, 
+    Plane, 
+    MessageSquare, 
+    Globe, 
+    LogOut,
+    Edit3 // ✅ ĐÃ THÊM IMPORT
+} from 'lucide-react';
 
 const Sidebar = () => {
-    // Tạm thời hardcode, sau này bạn có thể lấy từ AuthContext
     const handleLogout = () => {
         localStorage.removeItem('adminUser');
         localStorage.removeItem('adminToken');
-        // Điều hướng về trang login, bạn có thể dùng useNavigate() nếu ở trong component có Router context
         window.location.href = '/admin/login'; 
     };
     
@@ -16,6 +23,9 @@ const Sidebar = () => {
         { icon: <Map size={20} />, text: 'Quản lý Bookings', path: '/admin/bookings' },
         { icon: <Plane size={20} />, text: 'Quản lý Tours', path: '/admin/tours' },
         { icon: <Users size={20} />, text: 'Quản lý Users', path: '/admin/users' },
+        { icon: <MessageSquare size={20} />, text: 'Quản lý Đánh giá', path: '/admin/reviews' },
+        { icon: <Globe size={20} />, text: 'Quản lý Điểm đến', path: '/admin/destinations' },
+        { icon: <Edit3 size={20} />, text: 'Quản lý Blog', path: '/admin/blog' },
     ];
 
     return (
@@ -38,7 +48,9 @@ const Sidebar = () => {
                         to={link.path}
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200 ${
-                                isActive ? 'bg-sky-500 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                isActive 
+                                    ? 'bg-sky-500 text-white shadow-lg' 
+                                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                             }`
                         }
                     >
