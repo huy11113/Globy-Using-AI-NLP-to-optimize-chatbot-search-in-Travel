@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import ChatbotWidget from './components/common/ChatbotWidget'; 
+import ScrollToTop from './components/common/ScrollToTop';
 // --- Import Layouts ---
 import Header from './components/home/Header';
 import Footer from './components/common/Footer';
@@ -68,6 +69,7 @@ const AdminRoute = ({ children }) => {
 const App = () => {
     return (
         <Router>
+            <ScrollToTop /> 
             <Routes>
                 {/* --- Routes cho các trang xác thực (không có layout) --- */}
                 <Route path="/login" element={<Login />} />
