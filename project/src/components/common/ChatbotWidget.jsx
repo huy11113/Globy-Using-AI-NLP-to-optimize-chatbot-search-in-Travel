@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, MessageSquare, Send, X, Compass, ArrowRight, PlaneTakeoff, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { askChatbot } from '../../api/chatbot';
+import worldMapImage from '../../images/imager_612.jpg';
 
 // =================================================================
 // CÁC COMPONENT CON ĐÃ ĐƯỢC THIẾT KẾ LẠI
@@ -128,10 +129,10 @@ const WelcomeScreen = ({ onSuggestionClick }) => {
                     animate={{ rotate: 360 }}
                     transition={{ duration: 30, repeat: Infinity, ease: "linear"}}
                 >
-                    <img 
-                        src="https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/78018/world-map-clipart-md.png" 
+                     <img
+                        src={worldMapImage}
                         alt="World Map"
-                        className="w-full h-full"
+                        className="w-full h-full rounded-full"
                     />
                 </motion.div>
             </div>
