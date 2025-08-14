@@ -1,7 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { User, Shield, Trash2, Camera, LogOut, Mail, Phone } from 'lucide-react';
+import { User, Shield, Trash2, Camera, LogOut, Mail, Phone, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { updateProfile, deleteUser } from '../api/user';
+import { submitNewPassword } from '../api/auth';
 
 // --- COMPONENT CON CHO CÁC MỤC MENU ---
 const NavItem = ({ icon, label, isActive, onClick }) => (
@@ -18,7 +20,7 @@ const NavItem = ({ icon, label, isActive, onClick }) => (
     </button>
 );
 
-// --- COMPONENT CON CHO CÁC FORM ---
+// --- COMPONENT CON CHO CÁC FORM (giữ nguyên cho các trường khác) ---
 const InfoField = ({ id, label, type = 'text', value, onChange, disabled = false, icon }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
@@ -39,38 +41,96 @@ const InfoField = ({ id, label, type = 'text', value, onChange, disabled = false
     </div>
 );
 
+
 // --- COMPONENT CHÍNH ---
 const MyAccountPage = () => {
-    const { user, logout } = useContext(AuthContext);
+    const { user, login, logout } = useContext(AuthContext);
     const [activeTab, setActiveTab] = useState('profile');
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
 
-    if (!user) {
-        return <div className="flex justify-center items-center h-screen">Đang tải...</div>;
-    }
-
-    const [profile, setProfile] = useState({ name: user.name, phoneNumber: user.phoneNumber });
+    const [profile, setProfile] = useState({ 
+        name: user?.name || '', 
+        phoneNumber: user?.phoneNumber || '' 
+    });
     const [password, setPassword] = useState({ current: '', new: '', confirm: '' });
 
-    const handleProfileUpdate = (e) => {
-        e.preventDefault();
-        alert('Chức năng cập nhật thông tin sẽ sớm ra mắt!');
-        console.log('Updating profile:', profile);
-    };
+    // ✅ HÀM MỚI: Tự động định dạng số điện thoại
+    const formatPhoneNumber = (value) => {
+        if (!value) return value;
+        // 1. Chỉ giữ lại các chữ số
+        const phoneNumber = value.replace(/[^\d]/g, '');
+        // 2. Giới hạn 10 chữ số
+        const phoneNumberTrimmed = phoneNumber.slice(0, 10);
+        const phoneNumberLength = phoneNumberTrimmed.length;
 
-    const handlePasswordUpdate = (e) => {
-        e.preventDefault();
-        if (password.new !== password.confirm) {
-            alert('Mật khẩu mới không khớp!');
-            return;
+        // 3. Thêm khoảng trắng
+        if (phoneNumberLength < 4) return phoneNumberTrimmed;
+        if (phoneNumberLength < 7) {
+            return `${phoneNumberTrimmed.slice(0, 3)} ${phoneNumberTrimmed.slice(3)}`;
         }
-        alert('Chức năng đổi mật khẩu sẽ sớm ra mắt!');
-        console.log('Changing password...');
+        return `${phoneNumberTrimmed.slice(0, 3)} ${phoneNumberTrimmed.slice(3, 6)} ${phoneNumberTrimmed.slice(6, 10)}`;
     };
     
-    const handleDeleteAccount = () => {
+    // ✅ HÀM MỚI: Xử lý khi người dùng nhập số điện thoại
+    const handlePhoneChange = (e) => {
+        const formattedPhoneNumber = formatPhoneNumber(e.target.value);
+        setProfile(prev => ({ ...prev, phoneNumber: formattedPhoneNumber }));
+    };
+
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setMessage('');
+        setError('');
+        
+        // Loại bỏ khoảng trắng trước khi gửi đi
+        const phoneNumberToSubmit = profile.phoneNumber.replace(/\s/g, '');
+        
+        const result = await updateProfile(user._id, { name: profile.name, phoneNumber: phoneNumberToSubmit });
+        
+        if (result.success) {
+            setMessage('Cập nhật thông tin thành công!');
+            login(result.data); 
+        } else {
+            setError(result.message || 'Đã có lỗi xảy ra.');
+        }
+        setIsLoading(false);
+    };
+
+    const handlePasswordUpdate = async (e) => {
+        // ... (logic giữ nguyên)
+        e.preventDefault();
+        setMessage('');
+        setError('');
+
+        if (password.new !== password.confirm) {
+            setError('Mật khẩu mới không khớp!');
+            return;
+        }
+        if (password.new.length < 6) {
+            setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+            return;
+        }
+
+        setIsLoading(true);
+        setError("Chức năng này cần backend hỗ trợ API đổi mật khẩu bằng mật khẩu cũ.");
+        setIsLoading(false);
+    };
+    
+    const handleDeleteAccount = async () => {
+        // ... (logic giữ nguyên)
         if (window.confirm('Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.')) {
-            alert('Chức năng xóa tài khoản sẽ sớm ra mắt!');
-            logout();
+            setIsLoading(true);
+            const result = await deleteUser(user._id);
+            if (result.success) {
+                alert('Tài khoản đã được xóa thành công.');
+                logout();
+            } else {
+                alert(`Lỗi: ${result.message}`);
+            }
+            setIsLoading(false);
         }
     };
 
@@ -82,59 +142,85 @@ const MyAccountPage = () => {
             transition: { duration: 0.3 }
         };
 
-        switch (activeTab) {
-            case 'profile':
-                return (
-                    <motion.div {...motionProps}>
-                        <form onSubmit={handleProfileUpdate} className="space-y-6">
-                            <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">Thông tin cá nhân</h2>
-                            <InfoField id="name" label="Họ và tên" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} icon={<User className="text-gray-400" size={18}/>}/>
-                            <InfoField id="email" label="Email" value={user.email || 'Chưa cập nhật'} disabled icon={<Mail className="text-gray-400" size={18}/>} />
-                            <InfoField id="phoneNumber" label="Số điện thoại" value={profile.phoneNumber || 'Chưa cập nhật'} onChange={(e) => setProfile({...profile, phoneNumber: e.target.value})} icon={<Phone className="text-gray-400" size={18}/>} />
-                            <div className="pt-4 text-right">
-                                <button type="submit" className="btn primary__btn">Lưu thay đổi</button>
+        return (
+            <motion.div {...motionProps} key={activeTab}>
+                {message && <div className="p-3 mb-4 bg-green-100 text-green-700 rounded-md">{message}</div>}
+                {error && <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-md">{error}</div>}
+
+                {activeTab === 'profile' && (
+                    <form onSubmit={handleProfileUpdate} className="space-y-6">
+                        <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">Thông tin cá nhân</h2>
+                        <InfoField id="name" label="Họ và tên" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} icon={<User className="text-gray-400" size={18}/>}/>
+                        <InfoField id="email" label="Email" value={user.email || 'Chưa cập nhật'} disabled icon={<Mail className="text-gray-400" size={18}/>} />
+                        
+                        {/* --- Ô SỐ ĐIỆN THOẠI ĐÃ ĐƯỢC CẢI TIẾN --- */}
+                        <div>
+                            <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700 mb-1">Số điện thoại</label>
+                            <div className="relative">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <Phone className="text-gray-400" size={18}/>
+                                </div>
+                                <input
+                                    type="tel"
+                                    id="phoneNumber"
+                                    name="phoneNumber"
+                                    value={profile.phoneNumber}
+                                    onChange={handlePhoneChange}
+                                    placeholder="090 123 4567"
+                                    maxLength="12"
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                                />
                             </div>
-                        </form>
-                    </motion.div>
-                );
-            case 'password':
-                return (
-                     <motion.div {...motionProps}>
-                        <form onSubmit={handlePasswordUpdate} className="space-y-6">
-                            <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">Đổi mật khẩu</h2>
-                            <InfoField id="current" label="Mật khẩu hiện tại" type="password" value={password.current} onChange={(e) => setPassword({...password, current: e.target.value})} icon={<Shield className="text-gray-400" size={18}/>} />
-                            <InfoField id="new" label="Mật khẩu mới" type="password" value={password.new} onChange={(e) => setPassword({...password, new: e.target.value})} icon={<Shield className="text-gray-400" size={18}/>}/>
-                            <InfoField id="confirm" label="Xác nhận mật khẩu mới" type="password" value={password.confirm} onChange={(e) => setPassword({...password, confirm: e.target.value})} icon={<Shield className="text-gray-400" size={18}/>}/>
-                            <div className="pt-4 text-right">
-                                <button type="submit" className="btn primary__btn">Cập nhật mật khẩu</button>
-                            </div>
-                        </form>
-                    </motion.div>
-                );
-            case 'danger':
-                return (
-                    <motion.div {...motionProps}>
+                        </div>
+                        {/* --- KẾT THÚC CẢI TIẾN --- */}
+
+                        <div className="pt-4 text-right">
+                            <button type="submit" className="btn primary__btn" disabled={isLoading}>
+                                {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {activeTab === 'password' && (
+                    <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                        <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">Đổi mật khẩu</h2>
+                        <InfoField id="current" label="Mật khẩu hiện tại" type="password" value={password.current} onChange={(e) => setPassword({...password, current: e.target.value})} icon={<Lock className="text-gray-400" size={18}/>} />
+                        <InfoField id="new" label="Mật khẩu mới" type="password" value={password.new} onChange={(e) => setPassword({...password, new: e.target.value})} icon={<Lock className="text-gray-400" size={18}/>}/>
+                        <InfoField id="confirm" label="Xác nhận mật khẩu mới" type="password" value={password.confirm} onChange={(e) => setPassword({...password, confirm: e.target.value})} icon={<Lock className="text-gray-400" size={18}/>}/>
+                        <div className="pt-4 text-right">
+                            <button type="submit" className="btn primary__btn" disabled={isLoading}>
+                                {isLoading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {activeTab === 'danger' && (
+                    <div>
                         <h2 className="text-2xl font-bold text-red-600 border-b pb-4">Vùng nguy hiểm</h2>
                         <div className="mt-6 p-6 border border-red-300 bg-red-50 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <h3 className="font-semibold text-red-800">Xóa tài khoản của bạn</h3>
                                 <p className="text-sm text-red-700 mt-1">Hành động này không thể hoàn tác. Mọi dữ liệu của bạn sẽ bị xóa vĩnh viễn.</p>
                             </div>
-                            <button onClick={handleDeleteAccount} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 flex-shrink-0">
+                            <button onClick={handleDeleteAccount} disabled={isLoading} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 flex-shrink-0 disabled:bg-red-400">
                                 <Trash2 size={16} />
-                                Xóa tài khoản
+                                {isLoading ? 'Đang xóa...' : 'Xóa tài khoản'}
                             </button>
                         </div>
-                    </motion.div>
-                );
-            default:
-                return null;
-        }
+                    </div>
+                )}
+            </motion.div>
+        );
     };
 
+    if (!user) {
+        return <div className="flex justify-center items-center h-screen">Đang tải...</div>;
+    }
+    
     return (
         <main className="bg-slate-50">
-            {/* --- HERO SECTION ĐÃ ĐƯỢC THÊM LẠI --- */}
             <section className="relative bg-cover bg-center py-24" style={{ backgroundImage: "url('https://i.ytimg.com/vi/kAupcGjWFmo/maxresdefault.jpg')" }}>
                 <div className="absolute inset-0 bg-black/60"></div>
                 <div className="relative container mx-auto px-4 text-center text-white">
@@ -143,7 +229,6 @@ const MyAccountPage = () => {
                 </div>
             </section>
             
-            {/* --- NỘI DUNG CHÍNH --- */}
             <div className="container mx-auto px-4 -mt-16 relative z-10 pb-16">
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-200/80 p-4 md:p-6 lg:p-8 grid lg:grid-cols-12 gap-8">
                     

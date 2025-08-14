@@ -5,15 +5,24 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ THÊM STATE LOADING
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [wishlist, setWishlist] = useState([]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      fetchWishlist(parsedUser._id);
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        fetchWishlist(parsedUser._id);
+      }
+    } catch (error) {
+      console.error("Failed to parse user from localStorage", error);
+      // Xóa user bị lỗi nếu có
+      localStorage.removeItem('user');
+    } finally {
+      setLoading(false); // ✅ KẾT THÚC LOADING
     }
   }, []);
 
@@ -58,7 +67,8 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ 
-      user, login, logout, isDropdownOpen, toggleDropdown, closeDropdown,
+      user, login, logout, loading, // ✅ TRUYỀN LOADING XUỐNG
+      isDropdownOpen, toggleDropdown, closeDropdown,
       wishlist, toggleTourInWishlist, isTourInWishlist
     }}>
       {children}

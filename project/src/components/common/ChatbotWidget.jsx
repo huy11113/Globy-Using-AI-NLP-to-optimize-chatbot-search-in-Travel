@@ -1,67 +1,81 @@
 import { Link, useLocation } from 'react-router-dom';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, MessageSquare, Send, X, Sparkles, ArrowRight, ChevronDown, CornerDownLeft } from 'lucide-react';
+import { Bot, MessageSquare, Send, X, Compass, ArrowRight, PlaneTakeoff, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { askChatbot } from '../../api/chatbot';
 
 // =================================================================
-// ✅ BƯỚC 1: TÁI CẤU TRÚC - TÁCH CÁC COMPONENT CON
+// CÁC COMPONENT CON ĐÃ ĐƯỢC THIẾT KẾ LẠI
 // =================================================================
 
-// --- Component hiển thị một tour trong danh sách kết quả ---
-const TourResultCard = React.memo(({ tour, index }) => {
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { delay: index * 0.1 } }
-  };
-  return (
-    <motion.div variants={cardVariants}>
-      <Link
-        to={tour.link}
-        onClick={() => document.getElementById('chatbot-toggle-button')?.click()}
-        className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-sky-100/50 transition-colors group border border-transparent hover:border-sky-200"
-      >
-        <img src={tour.image} alt={tour.title} className="w-16 h-16 object-cover rounded-md flex-shrink-0 shadow-sm" />
-        <div className="flex-1 overflow-hidden">
-          <p className="font-semibold text-sm text-gray-800 group-hover:text-sky-700 truncate">{tour.title}</p>
-          <p className="text-xs text-gray-500 mt-1">{tour.details}</p>
+// --- ✅ COMPONENT MỚI: Hiển thị tour từng thẻ một với điều hướng ---
+const SingleTourCarousel = React.memo(({ tours }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const handleNext = () => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % tours.length);
+    };
+
+    const handlePrev = () => {
+        setCurrentIndex((prevIndex) => (prevIndex - 1 + tours.length) % tours.length);
+    };
+
+    const currentTour = tours[currentIndex];
+    
+    // Sử dụng AnimatePresence để tạo hiệu ứng chuyển đổi mượt mà
+    return (
+        <div className="mt-3 space-y-2">
+            <div className="relative h-[180px]">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentIndex}
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="w-full h-full"
+                    >
+                        <Link
+                            to={currentTour.link}
+                            onClick={() => document.getElementById('chatbot-toggle-button')?.click()}
+                            className="group block bg-white rounded-xl shadow-md overflow-hidden h-full w-full"
+                        >
+                            <div className="relative h-full">
+                                <img src={currentTour.image} alt={currentTour.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                                <div className="absolute bottom-0 left-0 p-3 text-white">
+                                    <p className="font-bold text-sm leading-tight line-clamp-2">{currentTour.title}</p>
+                                    <p className="text-xs opacity-80 mt-1">{currentTour.details.split(' - ')[0]}</p>
+                                </div>
+                            </div>
+                        </Link>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* Điều hướng và bộ đếm */}
+            {tours.length > 1 && (
+                <div className="flex items-center justify-between pt-1 px-2">
+                    <button onClick={handlePrev} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <span className="text-xs font-semibold text-gray-500">
+                        {currentIndex + 1} / {tours.length}
+                    </span>
+                    <button onClick={handleNext} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+            )}
         </div>
-        <ArrowRight size={16} className="text-gray-400 group-hover:translate-x-1 transition-transform mt-1" />
-      </Link>
-    </motion.div>
-  );
+    );
 });
 
-// --- Component hiển thị danh sách tour có thể mở rộng ---
-const ExpandableTourList = React.memo(({ tours }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const initialVisibleCount = 2;
-  const toursToShow = isExpanded ? tours : tours.slice(0, initialVisibleCount);
 
-  return (
-    <div className="mt-3 space-y-1 border-t border-gray-200 pt-3">
-      <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.05 } } }}>
-        {toursToShow.map((tour, index) => (
-          <TourResultCard key={tour.link || index} tour={tour} index={index} />
-        ))}
-      </motion.div>
-      {tours.length > initialVisibleCount && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full text-center text-xs font-bold text-sky-600 p-2 rounded-md hover:bg-sky-100/50 flex items-center justify-center gap-1 transition-colors"
-        >
-          <span>{isExpanded ? 'Ẩn bớt' : `Xem thêm ${tours.length - initialVisibleCount} kết quả`}</span>
-          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}><ChevronDown size={14} /></motion.div>
-        </button>
-      )}
-    </div>
-  );
-});
-
-// --- Component hiển thị tin nhắn của Bot ---
+// --- Component tin nhắn của Bot (cập nhật để dùng component mới) ---
 const BotMessage = React.memo(({ msg }) => (
   <div className="flex items-end gap-2.5">
-    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white shadow">
+    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white shadow">
       <Bot size={18} />
     </div>
     <motion.div
@@ -69,11 +83,9 @@ const BotMessage = React.memo(({ msg }) => (
       animate={{ opacity: 1, y: 0 }}
       className="p-3 rounded-t-xl rounded-br-xl max-w-[85%] bg-white text-gray-800 shadow-sm border border-gray-100"
     >
-      <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</p>
-      {msg.image && (
-        <img src={msg.image} alt="Tour suggestion" className="mt-2 rounded-lg shadow-md" />
-      )}
-      {msg.tours && msg.tours.length > 0 && <ExpandableTourList tours={msg.tours} />}
+      <p className="whitespace-pre-wrap text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+      {/* ✅ SỬ DỤNG COMPONENT CAROUSEL MỚI */}
+      {msg.tours && msg.tours.length > 0 && <SingleTourCarousel tours={msg.tours} />}
       {msg.link && (
         <Link
           to={msg.link}
@@ -90,7 +102,7 @@ const BotMessage = React.memo(({ msg }) => (
 // --- Component hiển thị loading "đang gõ" ---
 const LoadingIndicator = () => (
     <div className="flex items-end gap-2.5">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white shadow">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white shadow">
             <Bot size={18} />
         </div>
         <div className="p-3 rounded-t-xl rounded-br-xl bg-white flex items-center gap-1.5 shadow-sm border border-gray-100">
@@ -101,31 +113,53 @@ const LoadingIndicator = () => (
     </div>
 );
 
-// --- Component màn hình chào ---
-const WelcomeScreen = ({ onSuggestionClick }) => (
-    <div className="text-center text-gray-500 p-4 text-sm flex flex-col h-full justify-center">
-        <div className="bg-gradient-to-br from-sky-400 to-blue-500 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-4">
-            <Sparkles size={32} className="text-white"/>
-        </div>
-        <p className="font-bold text-gray-700 text-lg">Chào bạn! Tôi là Trợ lý du lịch AI</p>
-        <p className="mt-1">Tôi có thể giúp bạn tìm kiếm thông tin về các tour du lịch. Hãy thử hỏi tôi một vài câu nhé!</p>
-        <div className="mt-6 space-y-2">
-            {["Tour nổi bật?", "Tìm tour đi biển", "Tour dưới 5 triệu"].map(chip => (
-                <button
-                    key={chip}
-                    onClick={() => onSuggestionClick(chip)}
-                    className="px-3 py-1.5 bg-sky-100/60 text-sky-700 text-xs font-medium rounded-full hover:bg-sky-200/60 hover:text-sky-800 transition-colors"
+// --- Component màn hình chào mới ---
+const WelcomeScreen = ({ onSuggestionClick }) => {
+    const suggestions = [
+        { icon: <Sparkles size={20}/>, text: "Gợi ý tour nổi bật" },
+        { icon: <PlaneTakeoff size={20}/>, text: "Tìm tour đi Nhật Bản" },
+        { icon: <Compass size={20}/>, text: "Các tour mạo hiểm" },
+    ];
+    return (
+        <div className="text-center p-4 flex flex-col h-full justify-center">
+            <div className="relative w-24 h-24 mx-auto mb-6">
+                <motion.div 
+                    className="w-full h-full"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 30, repeat: Infinity, ease: "linear"}}
                 >
-                    {chip}
-                </button>
-            ))}
+                    <img 
+                        src="https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/78018/world-map-clipart-md.png" 
+                        alt="World Map"
+                        className="w-full h-full"
+                    />
+                </motion.div>
+            </div>
+
+            <p className="font-bold text-gray-800 text-lg">Xin chào, tôi là Globy!</p>
+            <p className="mt-1 text-gray-600 text-sm">Người bạn đồng hành AI, sẵn sàng giúp bạn khám phá thế giới. Bạn muốn bắt đầu từ đâu?</p>
+            <div className="mt-8 space-y-3">
+                {suggestions.map((item, index) => (
+                    <motion.button
+                        key={item.text}
+                        onClick={() => onSuggestionClick(item.text)}
+                        className="w-full text-left flex items-center gap-4 p-3 bg-white/80 rounded-lg shadow-sm hover:bg-white hover:shadow-md transition-all duration-200 border"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + index * 0.1 }}
+                    >
+                        <div className="text-sky-500">{item.icon}</div>
+                        <span className="text-sm font-semibold text-gray-700">{item.text}</span>
+                    </motion.button>
+                ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 
 // =================================================================
-// ✅ BƯỚC 2: CẬP NHẬT COMPONENT CHÍNH
+// COMPONENT CHÍNH
 // =================================================================
 const ChatbotWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -135,10 +169,8 @@ const ChatbotWidget = () => {
     const messagesEndRef = useRef(null);
     const location = useLocation();
 
-    // Tự động đóng chatbot khi chuyển trang
     useEffect(() => { setIsOpen(false); }, [location.pathname]);
 
-    // Tự động cuộn xuống tin nhắn mới nhất
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => {
@@ -147,73 +179,48 @@ const ChatbotWidget = () => {
         }
     }, [messages, isLoading, isOpen]);
 
-   /**
-     * Xử lý việc gửi tin nhắn, bao gồm cập nhật UI và gọi API.
-     * Sử dụng useCallback để tối ưu hóa, tránh việc tạo lại hàm một cách không cần thiết.
-     * @param {React.SyntheticEvent} [e] - Sự kiện từ form (nếu có).
-     * @param {string} [predefinedQuery] - Một câu hỏi được định nghĩa trước (ví dụ: từ suggestion chip).
-     */
     const handleSendMessage = useCallback(async (e, predefinedQuery = null) => {
-        // Ngăn chặn hành vi mặc định của form và kiểm tra đầu vào
         if (e) e.preventDefault();
         const query = predefinedQuery || input;
         if (!query.trim() || isLoading) return;
 
         const newUserMessage = { text: query, fromUser: true };
-
-        // Bước 1: Cập nhật giao diện một cách "lạc quan" (Optimistic UI Update)
-        // Hiển thị tin nhắn của người dùng ngay lập tức để tạo cảm giác phản hồi nhanh.
-        setMessages(prevMessages => [...prevMessages, newUserMessage]);
+        setMessages(prev => [...prev, newUserMessage]);
         setInput('');
         setIsLoading(true);
 
         try {
-            // Bước 2: Gọi API với lịch sử chat đầy đủ
-            // Bao gồm cả tin nhắn mới nhất của người dùng
             const historyForApi = [...messages, newUserMessage];
             const result = await askChatbot(historyForApi);
-
-            // Bước 3: Chuẩn hóa phản hồi từ bot
-            // Đảm bảo botResponse luôn là một object, dù API thành công hay thất bại.
             const botResponse = result.success 
                 ? (typeof result.response === 'object' ? result.response : { text: result.response })
                 : { text: result.message || "Rất tiếc, đã có lỗi xảy ra.", isError: true };
-
-            // Bước 4: Cập nhật giao diện với tin nhắn của bot
-            setMessages(prevMessages => [...prevMessages, { ...botResponse, fromUser: false }]);
-
+            setMessages(prev => [...prev, { ...botResponse, fromUser: false }]);
         } catch (error) {
-            console.error("Lỗi giao tiếp với API:", error);
-            // Xử lý các lỗi mạng nghiêm trọng (ví dụ: backend sập, không có internet)
-            const networkError = {
-                text: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại.",
-                fromUser: false,
-                isError: true
-            };
-            setMessages(prevMessages => [...prevMessages, networkError]);
+            const networkError = { text: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại.", fromUser: false, isError: true };
+            setMessages(prev => [...prev, networkError]);
         } finally {
-            // Luôn luôn tắt trạng thái loading sau khi hoàn tất
             setIsLoading(false);
         }
-    }, [messages, input, isLoading]); // Các dependencies của useCallback
+    }, [messages, input, isLoading]);
     
     return (
         <>
             <button
                 id="chatbot-toggle-button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed bottom-6 right-6 z-[999] p-4 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-2xl hover:scale-110 transition-all duration-300 transform"
+                className="fixed bottom-6 right-6 z-[999] p-4 rounded-full bg-gradient-to-br from-gray-800 to-black text-white shadow-2xl hover:scale-110 transition-all duration-300 transform"
                 aria-label={isOpen ? "Đóng chatbot" : "Mở chatbot"}
             >
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={isOpen ? 'x' : 'message'}
-                        initial={{ opacity: 0, rotate: -90 }}
-                        animate={{ opacity: 1, rotate: 0 }}
-                        exit={{ opacity: 0, rotate: 90 }}
-                        transition={{ duration: 0.2 }}
+                        key={isOpen ? 'x' : 'bot'}
+                        initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+                        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                        exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
+                        transition={{ duration: 0.3, ease: 'backOut' }}
                     >
-                        {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
+                        {isOpen ? <X size={28} /> : <Bot size={28} />}
                     </motion.div>
                 </AnimatePresence>
             </button>
@@ -225,24 +232,35 @@ const ChatbotWidget = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                        className="fixed bottom-24 right-6 z-50 w-[calc(100vw-3rem)] max-w-sm h-[70vh] max-h-[600px] bg-gray-50 rounded-2xl shadow-2xl flex flex-col border border-gray-200/80"
+                        className="fixed bottom-24 right-6 z-50 w-[calc(100vw-3rem)] max-w-sm h-[70vh] max-h-[600px] bg-[#f0f4f8] rounded-2xl shadow-2xl flex flex-col border overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="flex items-center p-4 bg-white/80 backdrop-blur-sm rounded-t-2xl shadow-sm border-b">
-                            <Sparkles size={20} className="text-sky-500" />
-                            <h3 className="ml-2 font-bold text-lg text-gray-800">Trợ lý du lịch AI</h3>
+                        <div className="flex items-center p-4 bg-white/80 backdrop-blur-sm shadow-sm border-b z-10">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white shadow-inner">
+                                <Bot size={22}/>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="font-bold text-lg text-gray-800">Globy AI</h3>
+                                <p className="text-xs text-green-600 font-semibold flex items-center gap-1.5">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    Online
+                                </p>
+                            </div>
                         </div>
 
                         {/* Message List */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {messages.length === 0 && <WelcomeScreen onSuggestionClick={(query) => handleSendMessage(null, query)} />}
-                            {messages.map((msg, index) => (
+                            {messages.length === 0 ? <WelcomeScreen onSuggestionClick={(query) => handleSendMessage(null, query)} /> :
+                            messages.map((msg, index) => (
                                 <div key={index} className={`flex ${msg.fromUser ? 'justify-end' : 'justify-start'}`}>
                                     {msg.fromUser ? (
                                         <motion.div 
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
-                                            className="p-3 rounded-t-xl rounded-bl-xl max-w-[85%] bg-blue-500 text-white shadow text-sm"
+                                            className="p-3 rounded-t-xl rounded-bl-xl max-w-[85%] bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow text-sm"
                                         >
                                             {msg.text}
                                         </motion.div>
@@ -256,20 +274,20 @@ const ChatbotWidget = () => {
                         </div>
 
                         {/* Input Form */}
-                        <div className="p-3 border-t bg-white rounded-b-2xl">
+                        <div className="p-3 border-t bg-white/90 backdrop-blur-sm">
                             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                                 <input
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Hỏi tôi về một chuyến đi..."
-                                    className="flex-1 px-4 py-2.5 bg-gray-100 rounded-lg border-2 border-transparent focus:border-sky-300 focus:outline-none transition-colors"
+                                    placeholder="Tìm kiếm hành trình của bạn..."
+                                    className="flex-1 px-4 py-2.5 bg-gray-100 rounded-lg border-2 border-transparent focus:border-sky-300 focus:bg-white focus:outline-none transition-colors"
                                     disabled={isLoading}
                                 />
                                 <button
                                     type="submit"
                                     disabled={isLoading || !input.trim()}
-                                    className="p-3 rounded-lg bg-sky-500 text-white hover:bg-sky-600 disabled:bg-gray-300 disabled:scale-95 transition-all duration-200"
+                                    className="p-3 rounded-lg bg-gray-800 text-white hover:bg-black disabled:bg-gray-300 disabled:scale-95 transition-all duration-200"
                                 >
                                     <Send size={20} />
                                 </button>

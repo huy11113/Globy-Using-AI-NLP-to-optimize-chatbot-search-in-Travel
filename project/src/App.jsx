@@ -5,7 +5,7 @@ import ChatbotWidget from './components/common/ChatbotWidget';
 // --- Import Layouts ---
 import Header from './components/home/Header';
 import Footer from './components/common/Footer';
-import AdminLayout from '@/admin/layouts/AdminLayout'; // Sửa đường dẫn
+import AdminLayout from '@/admin/layouts/AdminLayout';
 
 // --- Import Pages ---
 import Home from './pages/Home';
@@ -27,9 +27,9 @@ import BookingRequestPage from './pages/BookingRequestPage';
 import MyAccountPage from './pages/MyAccountPage';
 
 // Admin Pages
-import AdminLoginPage from '@/admin//pages/AdminLoginPage'; // Sửa đường dẫn
-import DashboardPage from '@/admin/pages/DashboardPage'; // Sửa đường dẫn
-import AdminBookingsPage from '@/admin/pages/AdminBookingsPage'; // Sửa đường dẫn
+import AdminLoginPage from '@/admin//pages/AdminLoginPage';
+import DashboardPage from '@/admin/pages/DashboardPage';
+import AdminBookingsPage from '@/admin/pages/AdminBookingsPage';
 import AdminToursPage from './admin/pages/AdminToursPage';
 import AdminTourFormPage from './admin/pages/AdminTourFormPage';
 import AdminUsersPage from './admin/pages/AdminUsersPage';
@@ -38,9 +38,21 @@ import AdminDestinationsPage from './admin/pages/AdminDestinationsPage';
 import AdminDestinationFormPage from './admin/pages/AdminDestinationFormPage';
 import AdminBlogPage from './admin/pages/AdminBlogPage';
 import AdminBlogFormPage from './admin/pages/AdminBlogFormPage';
-// --- Route Guards ---
+
+// --- ✅ CẬP NHẬT ROUTE GUARDS ---
 const PrivateRoute = ({ children }) => {
-    const { user } = useContext(AuthContext);
+    const { user, loading } = useContext(AuthContext);
+
+    // Nếu đang trong quá trình kiểm tra, hiển thị màn hình chờ
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-sky-500"></div>
+            </div>
+        );
+    }
+    
+    // Sau khi kiểm tra xong, nếu có user thì cho vào, không thì về trang login
     return user ? children : <Navigate to="/login" replace />;
 };
 
@@ -50,38 +62,6 @@ const AdminRoute = ({ children }) => {
     return adminUser && adminUser.role === 'admin' && adminToken
         ? children
         : <Navigate to="/admin/login" replace />;
-};
-
-// --- Layout Wrapper ---
-const LayoutDecider = () => {
-    const location = useLocation();
-    const isAdminRoute = location.pathname.startsWith('/admin/');
-    const isAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname);
-
-    if (isAdminRoute) {
-        // Nếu là route admin, AdminRoute sẽ quyết định hiển thị AdminLayout hoặc trang Login
-        return (
-            <AdminRoute>
-                <AdminLayout />
-            </AdminRoute>
-        );
-    }
-
-    if (isAuthRoute) {
-        // Các trang xác thực không có layout
-        return <Outlet />;
-    }
-
-    // Mặc định là layout chính cho người dùng
-    return (
-        <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1">
-                <Outlet />
-            </main>
-            <Footer />
-        </div>
-    );
 };
 
 // --- Main App Component ---
@@ -119,8 +99,6 @@ const App = () => {
                     <Route path="blog" element={<AdminBlogPage />} />
                     <Route path="blog/new" element={<AdminBlogFormPage />} />
                     <Route path="blog/edit/:id" element={<AdminBlogFormPage />} />
-
-
                 </Route>
 
                 {/* --- Routes cho người dùng (dùng MainLayout) --- */}

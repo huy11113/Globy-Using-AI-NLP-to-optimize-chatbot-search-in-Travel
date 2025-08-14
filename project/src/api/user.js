@@ -67,3 +67,16 @@ export const updateUserSuspension = (userId, isSuspended, token) => {
         body: JSON.stringify({ suspended: isSuspended }),
     });
 };
+/**
+ * ✅ HÀM MỚI: Cập nhật thông tin cá nhân của người dùng.
+ * @param {string} userId - ID của người dùng
+ * @param {object} profileData - { name, phoneNumber, avatar }
+ * @returns {Promise<object>}
+ */
+export const updateProfile = (userId, profileData) => {
+    return fetchApi(`/users/${userId}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
+    });
+};

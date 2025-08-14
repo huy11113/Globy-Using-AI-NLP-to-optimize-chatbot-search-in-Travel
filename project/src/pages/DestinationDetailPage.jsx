@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Home } from 'lucide-react';
-import useDestinationDetail from '../hooks/useDestinationDetail'; // Sử dụng hook vừa tạo
+import { Home, ArrowRight } from 'lucide-react'; // Thêm icon ArrowRight
+import useDestinationDetail from '../hooks/useDestinationDetail';
 import TourCard from '../components/home/tours/TourCard';
 import TourCardSkeleton from '../components/home/tours/TourCardSkeleton';
 
@@ -42,6 +42,9 @@ const DestinationDetailPage = () => {
   if (!destination) {
     return <div className="text-center py-40">Không tìm thấy địa điểm này.</div>;
   }
+
+  // ✅ GIỚI HẠN SỐ LƯỢNG TOUR HIỂN THỊ
+  const toursToShow = tours.slice(0, 8);
 
   return (
     <>
@@ -93,11 +96,27 @@ const DestinationDetailPage = () => {
         <div className="container mx-auto px-4 py-16">
           <h2 className="text-3xl font-bold text-center mb-10">Khám phá các tour tại {destination.name}</h2>
           {tours.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {tours.map(tour => (
-                <TourCard key={tour._id} tour={tour} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {/* ✅ SỬ DỤNG toursToShow ĐỂ RENDER */}
+                {toursToShow.map(tour => (
+                  <TourCard key={tour._id} tour={tour} />
+                ))}
+              </div>
+              
+              {/* ✅ THÊM NÚT "XEM TẤT CẢ" NẾU CÓ NHIỀU HƠN 8 TOUR */}
+              {tours.length > 8 && (
+                <div className="text-center mt-16">
+                    <Link 
+                        to="/tours"
+                        className="inline-flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-800 transition-colors group"
+                    >
+                        <span>Xem tất cả các tour</span>
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    </Link>
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-center text-gray-500">Hiện chưa có tour nào cho địa điểm này.</p>
           )}

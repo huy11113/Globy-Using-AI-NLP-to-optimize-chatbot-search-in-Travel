@@ -11,17 +11,15 @@ import useTours from '../hooks/useTours';
 
 const TourList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  // ✅ THAY ĐỔI QUAN TRỌNG:
-  // 3 hàng * 3 thẻ/hàng = 9 tour mỗi trang
   const PAGE_LIMIT = 9;
 
   // --- State Management ---
+  // ✅ ĐÃ CẬP NHẬT: Thay đổi state để khớp với bộ lọc mới
   const [filters, setFilters] = useState({
     searchTerm: searchParams.get('search') || '',
     sortBy: searchParams.get('sort') || '-createdAt',
-    maxPrice: searchParams.get('maxPrice') || '',
-    minRating: searchParams.get('minRating') || '',
+    priceRange: searchParams.get('priceRange') || '',
+    rating: searchParams.get('rating') || '',
   });
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
 
@@ -29,28 +27,32 @@ const TourList = () => {
   const { tours, total, loading, error } = useTours({ ...filters, page, limit: PAGE_LIMIT });
   const totalPages = Math.ceil(total / PAGE_LIMIT);
 
-  // --- Toàn bộ các hàm xử lý và useEffect giữ nguyên ---
+  // --- Cập nhật URL khi filter thay đổi ---
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.searchTerm) params.set('search', filters.searchTerm);
-    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
-    if (filters.minRating) params.set('minRating', filters.minRating);
+    if (filters.priceRange) params.set('priceRange', filters.priceRange);
+    if (filters.rating) params.set('rating', filters.rating);
     if (filters.sortBy !== '-createdAt') params.set('sort', filters.sortBy);
     if (page > 1) params.set('page', page);
     setSearchParams(params, { replace: true });
   }, [filters, page, setSearchParams]);
+
   const handleFilterChange = useCallback((name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
     setPage(1);
   }, []);
+  
   const handleSortChange = useCallback((value) => {
     setFilters(prev => ({ ...prev, sortBy: value }));
     setPage(1);
   }, []);
+
   const handleResetFilters = useCallback(() => {
-    setFilters({ searchTerm: '', sortBy: '-createdAt', maxPrice: '', minRating: '' });
+    setFilters({ searchTerm: '', sortBy: '-createdAt', priceRange: '', rating: '' });
     setPage(1);
   }, []);
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -59,7 +61,6 @@ const TourList = () => {
   };
 
 
-  // --- Phần JSX giữ nguyên ---
   return (
     <>
       <TourListHeader />
@@ -70,6 +71,7 @@ const TourList = () => {
               filters={filters}
               onFilterChange={handleFilterChange}
               onResetFilters={handleResetFilters}
+              loading={loading} // Truyền trạng thái loading xuống
             />
             <div className="w-full">
               <SortBar 

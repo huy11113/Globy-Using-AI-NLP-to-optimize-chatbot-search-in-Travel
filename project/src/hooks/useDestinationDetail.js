@@ -23,7 +23,7 @@ const useDestinationDetail = (id) => {
           // Sửa lỗi: Thêm /api vào đúng URL
           fetch(`${API_BASE_URL}/api/destinations/${id}`),
           // Sửa lỗi: Thêm /api vào đúng URL
-          fetch(`${API_BASE_URL}/api/tours?destinationId=${id}`) // Sửa lại thành destinationId để khớp với backend
+          fetch(`${API_BASE_URL}/api/tours?destination=${id}`)  // Sửa lại thành destinationId để khớp với backend
         ]);
 
         const destinationData = await destinationResponse.json();

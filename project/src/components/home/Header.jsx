@@ -71,7 +71,7 @@ const Header = () => {
     // Danh sách các mục điều hướng
     const navItems = [
         { name: 'Trang chủ', path: '/' },
-        { name: 'Tours', path: '/tours' },
+        { name: 'Chuyến đi', path: '/tours' },
         { name: 'Điểm đến', path: '/destinations' },
         { name: 'Blog', path: '/blog' },
         { name: 'Liên hệ', path: '/contact' },

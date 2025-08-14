@@ -6,8 +6,7 @@ export const askChatbot = async (messageHistory) => {
         const response = await fetch(`${API_BASE_URL}/api/chatbot/ask`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            // Quan trọng: Gửi đi một đối tượng có key là "history"
-            // đúng như backend (ChatRequest.java) đang mong đợi
+            // ✅ Đảm bảo body gửi đi là một object có key là "history"
             body: JSON.stringify({ history: messageHistory }),
         });
 
