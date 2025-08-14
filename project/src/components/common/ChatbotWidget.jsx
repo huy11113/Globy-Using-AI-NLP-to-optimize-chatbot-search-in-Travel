@@ -147,35 +147,55 @@ const ChatbotWidget = () => {
         }
     }, [messages, isLoading, isOpen]);
 
-    // ✅ Nâng cấp logic gửi tin nhắn để xử lý "Trí nhớ hội thoại"
+   /**
+     * Xử lý việc gửi tin nhắn, bao gồm cập nhật UI và gọi API.
+     * Sử dụng useCallback để tối ưu hóa, tránh việc tạo lại hàm một cách không cần thiết.
+     * @param {React.SyntheticEvent} [e] - Sự kiện từ form (nếu có).
+     * @param {string} [predefinedQuery] - Một câu hỏi được định nghĩa trước (ví dụ: từ suggestion chip).
+     */
     const handleSendMessage = useCallback(async (e, predefinedQuery = null) => {
+        // Ngăn chặn hành vi mặc định của form và kiểm tra đầu vào
         if (e) e.preventDefault();
         const query = predefinedQuery || input;
         if (!query.trim() || isLoading) return;
 
         const newUserMessage = { text: query, fromUser: true };
-        const updatedHistory = [...messages, newUserMessage];
 
-        setMessages(updatedHistory);
+        // Bước 1: Cập nhật giao diện một cách "lạc quan" (Optimistic UI Update)
+        // Hiển thị tin nhắn của người dùng ngay lập tức để tạo cảm giác phản hồi nhanh.
+        setMessages(prevMessages => [...prevMessages, newUserMessage]);
         setInput('');
         setIsLoading(true);
 
         try {
-            // Gửi toàn bộ lịch sử chat cho backend
-            const result = await askChatbot(updatedHistory);
-            
+            // Bước 2: Gọi API với lịch sử chat đầy đủ
+            // Bao gồm cả tin nhắn mới nhất của người dùng
+            const historyForApi = [...messages, newUserMessage];
+            const result = await askChatbot(historyForApi);
+
+            // Bước 3: Chuẩn hóa phản hồi từ bot
+            // Đảm bảo botResponse luôn là một object, dù API thành công hay thất bại.
             const botResponse = result.success 
                 ? (typeof result.response === 'object' ? result.response : { text: result.response })
-                : { text: result.message || "Rất tiếc, đã có lỗi xảy ra. Vui lòng thử lại.", isError: true };
+                : { text: result.message || "Rất tiếc, đã có lỗi xảy ra.", isError: true };
 
-            setMessages(prev => [...prev, { ...botResponse, fromUser: false }]);
+            // Bước 4: Cập nhật giao diện với tin nhắn của bot
+            setMessages(prevMessages => [...prevMessages, { ...botResponse, fromUser: false }]);
 
-        } catch (err) {
-            setMessages(prev => [...prev, { text: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại.", fromUser: false, isError: true }]);
+        } catch (error) {
+            console.error("Lỗi giao tiếp với API:", error);
+            // Xử lý các lỗi mạng nghiêm trọng (ví dụ: backend sập, không có internet)
+            const networkError = {
+                text: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại.",
+                fromUser: false,
+                isError: true
+            };
+            setMessages(prevMessages => [...prevMessages, networkError]);
         } finally {
+            // Luôn luôn tắt trạng thái loading sau khi hoàn tất
             setIsLoading(false);
         }
-    }, [input, messages, isLoading]);
+    }, [messages, input, isLoading]); // Các dependencies của useCallback
     
     return (
         <>
