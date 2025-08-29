@@ -34,7 +34,7 @@ import AdminBookingsPage from '@/admin/pages/AdminBookingsPage';
 import AdminToursPage from './admin/pages/AdminToursPage';
 import AdminTourFormPage from './admin/pages/AdminTourFormPage';
 import AdminUsersPage from './admin/pages/AdminUsersPage';
-import AdminReviewsPage from './admin/pages/AdminReviewsPage';
+
 import AdminDestinationsPage from './admin/pages/AdminDestinationsPage';
 import AdminDestinationFormPage from './admin/pages/AdminDestinationFormPage';
 import AdminBlogPage from './admin/pages/AdminBlogPage';
@@ -94,7 +94,7 @@ const App = () => {
                     <Route path="tours/new" element={<AdminTourFormPage />} />
                     <Route path="tours/edit/:id" element={<AdminTourFormPage />} />
                     <Route path="users" element={<AdminUsersPage />} />
-                    <Route path="reviews" element={<AdminReviewsPage />} />
+                  
                     <Route path="destinations" element={<AdminDestinationsPage />} />
                     <Route path="destinations/new" element={<AdminDestinationFormPage />} />
                     <Route path="destinations/edit/:id" element={<AdminDestinationFormPage />} />
