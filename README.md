@@ -4,8 +4,8 @@ Chào mừng bạn đến với Globy, một nền tảng du lịch hiện đạ
 
 **Truy cập trang web trực tiếp tại:** [https://www.globy-travel.website/](https://www.globy-travel.website/)
 
-![Trang chủ Globy](https://i.imgur.com/example.png)  
-*Lưu ý: Bạn có thể thay thế link ảnh trên bằng ảnh chụp màn hình thực tế của dự án.*
+![Trang chủ Globy]#![Alt text](C:\Users\DELL\Downloads\screencapture-globy-travel-website-2025-08-29-12_15_18.png)
+
 
 ## ✨ Tính năng nổi bật
 
