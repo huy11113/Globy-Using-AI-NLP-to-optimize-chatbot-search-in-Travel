@@ -3,10 +3,6 @@
 Chào mừng bạn đến với Globy, một nền tảng du lịch hiện đại được xây dựng để mang lại trải nghiệm tìm kiếm và đặt tour trực tuyến tốt nhất cho người dùng. Dự án này là giao diện người dùng (frontend), được phát triển bằng React, Vite và Tailwind CSS, tập trung vào tốc độ, hiệu suất và giao diện đẹp mắt.
 
 **Truy cập trang web trực tiếp tại:** [https://www.globy-travel.website/](https://www.globy-travel.website/)
-
-![Trang chủ Globy]#![Alt text](C)
-
-
 ## ✨ Tính năng nổi bật
 
 -   **Giao diện Hiện đại & Responsive:** Thiết kế đẹp mắt, tối ưu hóa cho mọi thiết bị từ máy tính để bàn đến điện thoại di động.
@@ -19,7 +15,7 @@ Chào mừng bạn đến với Globy, một nền tảng du lịch hiện đạ
 
 ## 🛠️ Công nghệ sử dụng
 
--   **Framework:** [React](https://reactjs.org/) (sử dụng Vite)
+-   **Framework:** [React](https://reactjs.org/) 
 -   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 -   **Routing:** [React Router DOM](https://reactrouter.com/)
 -   **Quản lý State:** React Context API
